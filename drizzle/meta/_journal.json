@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1760873423270,
+      "tag": "0000_absent_kronos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760881218463,
+      "tag": "0001_pretty_yellowjacket",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760950486377,
+      "tag": "0002_whole_devos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1760958085708,
+      "tag": "0003_brainy_dark_phoenix",
+      "breakpoints": true
+    }
+  ]
+}
