@@ -128,10 +128,22 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         updatedAt: new Date(),
       })
       .where(eq(institutions.id, institutionId))
-      .returning({ id: institutions.id });
+      .returning({
+        id: institutions.id,
+        name: institutions.name,
+        slug: institutions.slug,
+        location: institutions.location,
+        accreditation: institutions.accreditation,
+        website: institutions.website,
+        heroImage: institutions.heroImage,
+        logoUrl: institutions.logoUrl,
+        establishedYear: institutions.establishedYear,
+        shortDescription: institutions.shortDescription,
+        updatedAt: institutions.updatedAt,
+      });
 
     return NextResponse.json(
-      createSuccessResponse({ institutionId: updatedInstitution.id })
+      createSuccessResponse(updatedInstitution)
     );
   } catch (error) {
     console.error("Error updating institution:", error);

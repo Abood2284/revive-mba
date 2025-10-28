@@ -4,12 +4,9 @@ import "./globals.css";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 
 export const metadata: Metadata = {
-  title: "Revive MBA | AI-Guided Online MBA Counselling",
+  title: "Revive Education",
   description:
-    "Discover online MBA and PGDM programs tailored to your goals. Revive delivers AI-curated suggestions and counsellor support in minutes.",
-  icons: {
-    icon: "/favicon.ico",
-  },
+    "Revive Education is a platform that helps you find the right MBA program for your goals. We offer AI-curated suggestions and counsellor support in minutes.",
 };
 
 export default function RootLayout({

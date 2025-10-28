@@ -1,7 +1,8 @@
 import { db } from "@/db";
-import { institutions, programs } from "@/db/schema";
-import { eq, sql, and, gte, lte } from "drizzle-orm";
+import { institutions, programs, programSpecialisations } from "@/db/schema";
+import { eq, sql, and, gte, lte, ilike } from "drizzle-orm";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 interface ProgramsPageProps {
   searchParams: Promise<{
@@ -9,6 +10,9 @@ interface ProgramsPageProps {
     mode?: string;
     minFee?: string;
     maxFee?: string;
+    minDuration?: string;
+    maxDuration?: string;
+    specialization?: string;
     institution?: string;
   }>;
 }
@@ -18,6 +22,9 @@ async function getPrograms(filters: {
   mode?: string;
   minFee?: string;
   maxFee?: string;
+  minDuration?: string;
+  maxDuration?: string;
+  specialization?: string;
   institution?: string;
 }) {
   const conditions = [];
@@ -44,6 +51,20 @@ async function getPrograms(filters: {
     }
   }
 
+  if (filters.minDuration) {
+    const minDuration = parseInt(filters.minDuration, 10);
+    if (!isNaN(minDuration)) {
+      conditions.push(gte(programs.durationMonths, minDuration));
+    }
+  }
+
+  if (filters.maxDuration) {
+    const maxDuration = parseInt(filters.maxDuration, 10);
+    if (!isNaN(maxDuration)) {
+      conditions.push(lte(programs.durationMonths, maxDuration));
+    }
+  }
+
   if (filters.institution) {
     const institutionId = parseInt(filters.institution, 10);
     if (!isNaN(institutionId)) {
@@ -51,7 +72,13 @@ async function getPrograms(filters: {
     }
   }
 
-  const query = db
+  if (filters.specialization) {
+    conditions.push(
+      ilike(programSpecialisations.name, `%${filters.specialization}%`)
+    );
+  }
+
+  const baseQuery = db
     .select({
       id: programs.id,
       degreeType: programs.degreeType,
@@ -73,8 +100,19 @@ async function getPrograms(filters: {
       },
     })
     .from(programs)
-    .leftJoin(institutions, eq(programs.institutionId, institutions.id))
-    .orderBy(sql`${programs.isFeatured} DESC, ${programs.totalFee} ASC`);
+    .leftJoin(institutions, eq(programs.institutionId, institutions.id));
+
+  // Add specialization join if filtering by specialization
+  const query = filters.specialization
+    ? baseQuery
+        .leftJoin(
+          programSpecialisations,
+          eq(programs.id, programSpecialisations.programId)
+        )
+        .orderBy(sql`${programs.isFeatured} DESC, ${programs.totalFee} ASC`)
+    : baseQuery.orderBy(
+        sql`${programs.isFeatured} DESC, ${programs.totalFee} ASC`
+      );
 
   if (conditions.length > 0) {
     return query.where(and(...conditions));
@@ -128,163 +166,223 @@ export default async function ProgramsPage({
   const featuredPrograms = programList.filter((p) => p.isFeatured);
   const regularPrograms = programList.filter((p) => !p.isFeatured);
 
+  const heroStats = [
+    {
+      value: `${programList.length || 0}`,
+      label: "Accredited programs listed",
+    },
+    {
+      value: "2.1K+",
+      label: "Students enrolled",
+    },
+    {
+      value: `${institutionList.length || 0}`,
+      label: "Partner institutions",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[var(--surface-base)]">
       {/* Hero */}
-      <section className="bg-[var(--surface-subtle)] pb-16 pt-28">
-        <div className="section-container">
-          <span className="eyebrow">Program catalog</span>
-          <h1 className="mt-4 text-4xl font-bold text-[color:var(--color-secondary)] sm:text-5xl">
-            Discover MBA & PGDM programs
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
-            Compare accredited online and executive programs from 45+ partner
-            institutions. Filter by delivery mode, fee range, and specialisation
-            to find your best fit.
-          </p>
+      <section className="relative overflow-hidden bg-[#3D38B8] pb-16 pt-24 text-white">
+        <div className="section-container relative">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl font-black leading-[1.15] tracking-tight text-white sm:text-5xl">
+              MBA & PGDM Programs
+            </h1>
+            <p className="mt-4 text-lg leading-relaxed text-white/70">
+              Compare accredited programs by fees, duration, and delivery mode.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              {heroStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm"
+                >
+                  <p className="text-2xl font-bold tracking-tight text-white">
+                    {stat.value}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-white/60">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Filters */}
-      <section className="border-b border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[var(--surface-base)] py-6">
+      <section className="relative -mt-16 pb-14">
         <div className="section-container">
-          <form method="get" className="flex flex-wrap items-center gap-4">
-            {/* Degree Type */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="degreeType"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]"
-              >
-                Degree
-              </label>
-              <select
-                name="degreeType"
-                id="degreeType"
-                defaultValue={params.degreeType || ""}
-                className="rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2 text-sm text-[color:var(--color-secondary)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              >
-                <option value="">All degrees</option>
-                {degreeTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Delivery Mode */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="mode"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]"
-              >
-                Mode
-              </label>
-              <select
-                name="mode"
-                id="mode"
-                defaultValue={params.mode || ""}
-                className="rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2 text-sm text-[color:var(--color-secondary)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              >
-                <option value="">All modes</option>
-                {deliveryModes.map((mode) => (
-                  <option key={mode} value={mode}>
-                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Min Fee */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="minFee"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]"
-              >
-                Min fee
-              </label>
-              <input
-                type="number"
-                name="minFee"
-                id="minFee"
-                placeholder="₹ 0"
-                defaultValue={params.minFee || ""}
-                className="w-32 rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2 text-sm text-[color:var(--color-secondary)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              />
-            </div>
-
-            {/* Max Fee */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="maxFee"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]"
-              >
-                Max fee
-              </label>
-              <input
-                type="number"
-                name="maxFee"
-                id="maxFee"
-                placeholder="₹ 500000"
-                defaultValue={params.maxFee || ""}
-                className="w-32 rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2 text-sm text-[color:var(--color-secondary)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              />
-            </div>
-
-            {/* Institution */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="institution"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]"
-              >
-                Institution
-              </label>
-              <select
-                name="institution"
-                id="institution"
-                defaultValue={params.institution || ""}
-                className="rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2 text-sm text-[color:var(--color-secondary)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              >
-                <option value="">All institutions</option>
-                {institutionList.map((inst) => (
-                  <option key={inst.id} value={inst.id}>
-                    {inst.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              className="mt-auto inline-flex items-center justify-center rounded-lg bg-[color:var(--color-accent)] px-5 py-2 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90"
-            >
-              Apply filters
-            </button>
-
-            {(params.degreeType ||
-              params.mode ||
-              params.minFee ||
-              params.maxFee ||
-              params.institution) && (
+          <div className="rounded-3xl border border-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_92%,white_8%)] p-6 shadow-[0_28px_48px_-32px_rgba(16,19,26,0.32)] md:p-8">
+            <div className="flex flex-col gap-4 pb-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-[color:var(--color-secondary)]">
+                  Filter programs
+                </h2>
+              </div>
               <Link
-                href="/programs"
-                className="mt-auto inline-flex items-center justify-center rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] px-5 py-2 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:border-[color:color-mix(in_srgb,var(--color-secondary)_40%,transparent)]"
+                href="/lead-form"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_15%,transparent)] px-5 py-2 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:border-[color:color-mix(in_srgb,var(--color-secondary)_35%,transparent)]"
               >
-                Clear filters
+                Need help?
+                <span aria-hidden>→</span>
               </Link>
-            )}
-          </form>
+            </div>
+            <form
+              method="get"
+              className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+            >
+              {/* Degree Type */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="degreeType"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]"
+                >
+                  Degree
+                </label>
+                <select
+                  name="degreeType"
+                  id="degreeType"
+                  defaultValue={params.degreeType || ""}
+                  className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
+                >
+                  <option value="">All degrees</option>
+                  {degreeTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Delivery Mode */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="mode"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]"
+                >
+                  Mode
+                </label>
+                <select
+                  name="mode"
+                  id="mode"
+                  defaultValue={params.mode || ""}
+                  className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
+                >
+                  <option value="">All modes</option>
+                  {deliveryModes.map((mode) => (
+                    <option key={mode} value={mode}>
+                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Min Fee */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="minFee"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]"
+                >
+                  Min fee
+                </label>
+                <input
+                  type="number"
+                  name="minFee"
+                  id="minFee"
+                  placeholder="₹ 0"
+                  defaultValue={params.minFee || ""}
+                  className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
+                />
+              </div>
+
+              {/* Max Fee */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="maxFee"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]"
+                >
+                  Max fee
+                </label>
+                <input
+                  type="number"
+                  name="maxFee"
+                  id="maxFee"
+                  placeholder="₹ 500000"
+                  defaultValue={params.maxFee || ""}
+                  className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
+                />
+              </div>
+
+              {/* Institution */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="institution"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]"
+                >
+                  Institution
+                </label>
+                <select
+                  name="institution"
+                  id="institution"
+                  defaultValue={params.institution || ""}
+                  className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
+                >
+                  <option value="">All institutions</option>
+                  {institutionList.map((inst) => (
+                    <option key={inst.id} value={inst.id}>
+                      {inst.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-end gap-3">
+                <button
+                  type="submit"
+                  className="inline-flex w-full items-center justify-center rounded-full bg-[color:var(--color-accent)] px-6 py-3 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90"
+                >
+                  Apply filters
+                </button>
+              </div>
+              {(params.degreeType ||
+                params.mode ||
+                params.minFee ||
+                params.maxFee ||
+                params.institution) && (
+                <div className="flex items-end">
+                  <Link
+                    href="/programs"
+                    className="inline-flex w-full items-center justify-center rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_20%,transparent)] px-6 py-3 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:border-[color:color-mix(in_srgb,var(--color-secondary)_35%,transparent)]"
+                  >
+                    Clear filters
+                  </Link>
+                </div>
+              )}
+            </form>
+          </div>
         </div>
       </section>
 
       {/* Results */}
-      <section className="bg-[var(--surface-base)] py-16">
+      <section
+        id="program-results"
+        className="bg-[var(--surface-base)] pb-20 pt-10"
+      >
         <div className="section-container">
-          <div className="mb-6 flex items-center justify-between">
-            <p className="text-sm font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
+          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-[color:var(--color-secondary)]">
+                Programs
+              </h2>
+            </div>
+            <div className="inline-flex items-center gap-3 rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-white px-5 py-2 text-sm font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]">
+              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[color:var(--color-accent)]" />
               {programList.length}{" "}
               {programList.length === 1 ? "program" : "programs"} found
-            </p>
+            </div>
           </div>
 
           {featuredPrograms.length > 0 && (
@@ -361,73 +459,119 @@ interface ProgramCardProps {
 }
 
 function ProgramCard({ program }: ProgramCardProps) {
+  const heroStyle: CSSProperties = program.heroImage
+    ? {
+        backgroundImage: `linear-gradient(180deg, rgba(16,19,26,0.08) 0%, rgba(16,19,26,0.6) 100%), url(${program.heroImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : {
+        backgroundImage:
+          "linear-gradient(135deg, rgba(61,56,184,0.75) 0%, rgba(237,28,36,0.65) 100%)",
+      };
+
   return (
-    <article className="surface-card p-6 transition hover:-translate-y-1 hover:shadow-xl">
-      {program.isFeatured && <span className="metric-chip mb-4">Featured</span>}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]">
-            {program.degreeType}
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-[color:var(--color-secondary)]">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-white shadow-[0_20px_36px_-24px_rgba(16,19,26,0.24)] transition-transform hover:-translate-y-[2px] hover:shadow-[0_28px_48px_-28px_rgba(16,19,26,0.28)]">
+      <div className="relative h-40 w-full">
+        <div
+          className="absolute inset-0"
+          style={heroStyle}
+          aria-hidden={!program.heroImage}
+        />
+        {!program.heroImage && (
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white/80">
+            Add program visual
+          </div>
+        )}
+        <div className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-white shadow-[0_10px_24px_-14px_rgba(16,19,26,0.6)]">
+          {program.degreeType}
+        </div>
+        {program.deliveryMode && (
+          <div className="absolute top-5 right-5 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-white/90">
+            {program.deliveryMode}
+          </div>
+        )}
+        {program.isFeatured && (
+          <div className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[color:var(--color-secondary)] shadow-[0_10px_24px_-16px_rgba(16,19,26,0.4)]">
+            <span aria-hidden>★</span>
+            Featured by Revive
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="flex flex-col gap-1.5">
+          <h3 className="text-lg font-semibold text-[color:var(--color-secondary)]">
             {program.title}
           </h3>
           {program.institution && (
-            <p className="mt-1 text-sm font-medium text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
+            <div className="text-sm font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_75%,white_25%)]">
               {program.institution.name}
-            </p>
+            </div>
           )}
         </div>
-      </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-4 border-t border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] pt-4">
-        {program.durationMonths && (
+        <dl className="grid gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_94%,white_6%)] p-3 sm:grid-cols-2">
+          {program.durationMonths && (
+            <div>
+              <dt className="text-xs uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
+                Duration
+              </dt>
+              <dd className="mt-1 text-sm font-semibold text-[color:var(--color-secondary)]">
+                {program.durationMonths} months
+              </dd>
+            </div>
+          )}
+          {program.applicationFee && (
+            <div>
+              <dt className="text-xs uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
+                Application fee
+              </dt>
+              <dd className="mt-1 text-sm font-semibold text-[color:var(--color-secondary)]">
+                {formatCurrency(program.applicationFee)}
+              </dd>
+            </div>
+          )}
+          {program.deliveryMode && (
+            <div>
+              <dt className="text-xs uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
+                Delivery
+              </dt>
+              <dd className="mt-1 text-sm font-semibold capitalize text-[color:var(--color-secondary)]">
+                {program.deliveryMode}
+              </dd>
+            </div>
+          )}
           <div>
             <dt className="text-xs uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
-              Duration
+              Total fee
             </dt>
-            <dd className="mt-1 text-sm font-semibold text-[color:var(--color-secondary)]">
-              {program.durationMonths} months
+            <dd className="mt-1 flex items-center gap-2 text-sm font-semibold text-[color:var(--color-secondary)]">
+              {formatCurrency(program.totalFee)}
+              {program.emiAvailable && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-[color:color-mix(in_srgb,var(--color-accent)_12%,transparent)] px-3 py-1 text-xs font-semibold text-[color:color-mix(in_srgb,var(--color-accent)_88%,black_12%)]">
+                  EMI ready
+                </span>
+              )}
             </dd>
           </div>
-        )}
-        {program.deliveryMode && (
-          <div>
-            <dt className="text-xs uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
-              Mode
-            </dt>
-            <dd className="mt-1 text-sm font-semibold text-[color:var(--color-secondary)]">
-              {program.deliveryMode.charAt(0).toUpperCase() +
-                program.deliveryMode.slice(1)}
-            </dd>
-          </div>
-        )}
-        <div className="col-span-2">
-          <dt className="text-xs uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
-            Total fee
-          </dt>
-          <dd className="mt-1 flex items-baseline gap-2 text-base font-semibold text-[color:var(--color-secondary)]">
-            {formatCurrency(program.totalFee)}
-            {program.emiAvailable && (
-              <span className="pill text-xs">EMI available</span>
-            )}
-          </dd>
+        </dl>
+
+        <div className="mt-auto flex flex-wrap gap-2.5">
+          <Link
+            href={`/programs/${program.id}`}
+            className="inline-flex min-w-[9rem] flex-1 items-center justify-center gap-2 rounded-full bg-[color:var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90"
+          >
+            View details
+            <span aria-hidden>→</span>
+          </Link>
+          <Link
+            href="/#lead-form"
+            className="inline-flex min-w-[8rem] items-center justify-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_20%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:border-[color:color-mix(in_srgb,var(--color-secondary)_35%,transparent)]"
+          >
+            Apply now
+          </Link>
         </div>
-      </dl>
-
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Link
-          href={`/programs/${program.id}`}
-          className="inline-flex flex-1 items-center justify-center rounded-full bg-[color:var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90"
-        >
-          View details
-        </Link>
-        <Link
-          href="/#lead-form"
-          className="inline-flex items-center justify-center rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] px-4 py-2 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:border-[color:color-mix(in_srgb,var(--color-secondary)_40%,transparent)]"
-        >
-          Apply now
-        </Link>
       </div>
     </article>
   );

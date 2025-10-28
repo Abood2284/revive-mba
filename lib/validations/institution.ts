@@ -4,6 +4,13 @@
 import { z } from "zod";
 
 // Base institution schema for creation
+const optionalShortText = (max: number) =>
+  z.union([z.string().max(max), z.null()]).optional();
+
+const optionalUrl = z
+  .union([z.string().url("Invalid URL"), z.literal(""), z.null()])
+  .optional();
+
 export const createInstitutionSchema = z.object({
   name: z
     .string()
@@ -17,22 +24,22 @@ export const createInstitutionSchema = z.object({
       /^[a-z0-9-]+$/,
       "Slug must contain only lowercase letters, numbers, and hyphens"
     ),
-  location: z.string().max(200).optional(),
-  accreditation: z.string().max(200).optional(),
-  website: z.string().url("Invalid website URL").optional().or(z.literal("")),
-  heroImage: z
-    .string()
-    .url("Invalid hero image URL")
-    .optional()
-    .or(z.literal("")),
-  logoUrl: z.string().url("Invalid logo URL").optional().or(z.literal("")),
+  location: optionalShortText(200),
+  accreditation: optionalShortText(200),
+  website: optionalUrl,
+  heroImage: optionalUrl,
+  logoUrl: optionalUrl,
   establishedYear: z
-    .number()
-    .int()
-    .min(1800)
-    .max(new Date().getFullYear())
+    .union([
+      z
+        .number()
+        .int()
+        .min(1800)
+        .max(new Date().getFullYear()),
+      z.null(),
+    ])
     .optional(),
-  shortDescription: z.string().max(500).optional(),
+  shortDescription: optionalShortText(500),
 });
 
 // Update institution schema (all fields optional except id)
@@ -47,18 +54,22 @@ export const updateInstitutionSchema = z.object({
       "Slug must contain only lowercase letters, numbers, and hyphens"
     )
     .optional(),
-  location: z.string().max(200).optional(),
-  accreditation: z.string().max(200).optional(),
-  website: z.string().url().optional().or(z.literal("")),
-  heroImage: z.string().url().optional().or(z.literal("")),
-  logoUrl: z.string().url().optional().or(z.literal("")),
+  location: optionalShortText(200),
+  accreditation: optionalShortText(200),
+  website: optionalUrl,
+  heroImage: optionalUrl,
+  logoUrl: optionalUrl,
   establishedYear: z
-    .number()
-    .int()
-    .min(1800)
-    .max(new Date().getFullYear())
+    .union([
+      z
+        .number()
+        .int()
+        .min(1800)
+        .max(new Date().getFullYear()),
+      z.null(),
+    ])
     .optional(),
-  shortDescription: z.string().max(500).optional(),
+  shortDescription: optionalShortText(500),
 });
 
 // Query parameters for listing institutions

@@ -4,15 +4,20 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --color-primary: hsl(270 50% 90%);
-  --color-secondary: hsl(270 50% 10%);
-  --color-tertiary: hsl(330 80% 20%);
-  --color-accent: hsl(210 80% 20%);
+  --brand-red: #ed1c24;
+  --brand-blue-700: #514ea1;
+  --brand-blue-800: #3d38b8;
+  --brand-white: #ffffff;
 
-  --surface-base: var(--color-primary);
+  --color-primary: var(--brand-white);
+  --color-secondary: #10131a;
+  --color-tertiary: var(--brand-red);
+  --color-accent: var(--brand-blue-700);
+
+  --surface-base: #f5f6fa;
   --surface-contrast: var(--color-secondary);
-  --surface-muted: hsl(270 35% 80%);
-  --surface-subtle: hsl(270 45% 97%);
+  --surface-muted: #d7dbec;
+  --surface-subtle: #ffffff;
 
   --font-family-base: var(
     --font-nunito,
@@ -38,19 +43,19 @@
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
-  --shadow-soft: 0 12px 32px -24px hsl(270 50% 20% / 0.35);
+  --shadow-soft: 0 12px 32px -24px rgba(16, 19, 26, 0.28);
 }
 
 .dark {
-  --color-primary: hsl(270 50% 10%);
-  --color-secondary: hsl(270 50% 90%);
-  --color-tertiary: hsl(330 80% 80%);
-  --color-accent: hsl(210 80% 80%);
+  --color-primary: var(--color-secondary);
+  --color-secondary: var(--brand-white);
+  --color-tertiary: var(--brand-red);
+  --color-accent: var(--brand-blue-700);
 
-  --surface-base: var(--color-primary);
-  --surface-contrast: var(--color-secondary);
-  --surface-muted: hsl(270 35% 18%);
-  --surface-subtle: hsl(270 30% 14%);
+  --surface-base: #10131a;
+  --surface-contrast: var(--brand-white);
+  --surface-muted: #2a3042;
+  --surface-subtle: #171c2b;
 }
 
 @theme inline {
@@ -60,16 +65,16 @@
   --color-background: var(--surface-base);
   --color-foreground: var(--surface-contrast);
   --color-muted: var(--surface-muted);
-  --color-muted-foreground: hsl(270 25% 45%);
+  --color-muted-foreground: #6d7390;
   --color-accent: var(--color-accent);
   --color-accent-foreground: hsl(210 100% 96%);
   --color-primary: var(--color-secondary);
-  --color-primary-foreground: hsl(270 100% 98%);
+  --color-primary-foreground: var(--color-secondary);
   --color-secondary: var(--surface-subtle);
   --color-secondary-foreground: var(--color-secondary);
-  --color-border: hsl(270 35% 75%);
-  --color-input: hsl(270 35% 75%);
-  --color-ring: hsl(210 80% 35% / 0.6);
+  --color-border: #d9dce6;
+  --color-input: #d9dce6;
+  --color-ring: rgba(61, 56, 184, 0.55);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -298,6 +303,50 @@ strong {
     animation: marquee 30s linear infinite;
   }
 
+  .glow-cta {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: 0 16px 34px -22px rgba(61, 56, 184, 0.65);
+    animation: buttonGlowPulse 3s ease-in-out infinite;
+  }
+
+  .glow-cta::after,
+  .glow-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-cta::before {
+    inset: -6px;
+    background: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0) 10%,
+      rgba(255, 255, 255, 0.5) 45%,
+      rgba(255, 255, 255, 0) 75%
+    );
+    transform: translateX(-160%);
+    animation: buttonShineSweep 3.4s ease-in-out infinite;
+  }
+
+  .glow-cta::after {
+    background: radial-gradient(
+      140% 140% at 0% 0%,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0) 60%
+    );
+    opacity: 0.55;
+  }
+
+  .glow-cta > span {
+    position: relative;
+    z-index: 10;
+  }
+
   @keyframes marquee {
     0% {
       transform: translateX(0);
@@ -317,6 +366,28 @@ strong {
     50% {
       transform: translateY(-2px);
       box-shadow: 0 20px 38px -26px color-mix(in srgb, var(--color-accent) 60%, transparent);
+    }
+  }
+
+  @keyframes buttonGlowPulse {
+    0%,
+    100% {
+      box-shadow: 0 16px 34px -22px rgba(61, 56, 184, 0.5);
+    }
+    50% {
+      box-shadow: 0 20px 40px -18px rgba(61, 56, 184, 0.75);
+    }
+  }
+
+  @keyframes buttonShineSweep {
+    0% {
+      transform: translateX(-160%);
+    }
+    55% {
+      transform: translateX(160%);
+    }
+    100% {
+      transform: translateX(160%);
     }
   }
 }

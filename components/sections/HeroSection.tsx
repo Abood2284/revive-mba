@@ -201,19 +201,19 @@ export function HeroSection() {
                 </span>
               </Link>
             </div>
-            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4 text-sm font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_80%,white_20%)]">
+            <div className="mt-8 grid grid-cols-3 items-center gap-2 text-sm font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_80%,white_20%)] sm:flex sm:flex-wrap sm:gap-x-8 sm:gap-y-4">
               {heroMetrics.map((metric) => (
                 <span
                   key={metric.label}
-                  className="flex items-center gap-2 text-[color:var(--color-secondary)]"
+                  className="flex items-center justify-center gap-2 text-[color:var(--color-secondary)] sm:justify-start"
                 >
                   <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-base)_94%,white_6%)] text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]">
                     {metricIcons[metric.icon]}
                   </span>
-                  <span className="text-2xl font-bold tracking-tight">
+                  <span className="text-base font-extrabold tracking-tight sm:text-2xl">
                     {metric.value}
                   </span>
-                  <span className="text-xs uppercase tracking-[0.22em] text-[color:color-mix(in_srgb,var(--color-secondary)_58%,white_42%)]">
+                  <span className="text-[10px] uppercase tracking-[0.22em] text-[color:color-mix(in_srgb,var(--color-secondary)_58%,white_42%)] sm:text-xs">
                     {metric.label}
                   </span>
                 </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 type FormStep = 1 | 2 | 3 | 4 | 5;
@@ -576,33 +577,30 @@ export default function LeadFormPage() {
   const canGoBack = currentStagePosition > 0 || isContactStep;
 
   return (
-    <div className="min-h-screen bg-[var(--surface-base)]">
+    <div className="min-h-screen bg-[#f5f6fa] text-[#10131a]">
       {submitSuccess ? (
-        <section className="bg-[var(--surface-subtle)] pb-24 pt-28">
+        <section className="border-b border-[#d9dce6] bg-white pb-24 pt-28">
           <div className="section-container max-w-2xl text-center">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--color-accent)] text-2xl text-[var(--color-accent-foreground)]">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#3D38B8] text-2xl text-white shadow">
               ✓
             </div>
-            <h1 className="mt-6 text-4xl font-bold text-[color:var(--color-secondary)]">
-              Thank you for your interest!
-            </h1>
-            <p className="mt-4 text-lg text-[color:color-mix(in srgb, var(--color-secondary) 65%, white 35%)]">
-              Your profile has been submitted successfully. Our AI counsellor is
-              generating your personalised program recommendations.
+            <h1 className="mt-6 text-4xl font-semibold sm:text-5xl">Thank you for your interest!</h1>
+            <p className="mt-4 text-lg leading-relaxed text-[#5a6072]">
+              Your profile has been submitted successfully. Our AI counsellor is generating your personalised program recommendations.
             </p>
-            <p className="mt-3 text-base font-semibold text-[color:var(--color-accent)]">
+            <p className="mt-3 text-base font-semibold text-[#ED1C24]">
               Check your inbox within 2 minutes for your detailed shortlist.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm font-semibold">
               <Link
                 href="/programs"
-                className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-accent)] px-6 py-3 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90"
+                className="inline-flex items-center justify-center rounded-full bg-[#3D38B8] px-6 py-3 text-white transition hover:bg-[#514EA1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8]"
               >
                 Browse all programs
               </Link>
               <Link
                 href="/"
-                className="inline-flex items-center justify-center rounded-full border border-[color:color-mix(in srgb, var(--color-secondary) 25%, transparent)] px-6 py-3 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:border-[color:color-mix(in srgb, var(--color-secondary) 40%, transparent)]"
+                className="inline-flex items-center justify-center rounded-full border border-[#d9dce6] px-6 py-3 text-[#3D38B8] transition hover:border-[#514EA1] hover:text-[#514EA1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8]"
               >
                 Return home
               </Link>
@@ -611,156 +609,138 @@ export default function LeadFormPage() {
         </section>
       ) : (
         <>
-          <section className="bg-[var(--surface-subtle)] pb-12 pt-28">
+          <section className="border-b border-[#d9dce6] bg-white pb-12 pt-28">
             <div className="section-container max-w-3xl">
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div>
-                  <span className="eyebrow">Your MBA Journey</span>
-                  <h1 className="mt-4 text-3xl font-bold text-[color:var(--color-secondary)] sm:text-4xl">
-                    Find Your Perfect MBA
-                  </h1>
-                  <p className="mt-3 text-sm text-[color:color-mix(in srgb, var(--color-secondary) 60%, white 40%)]">
-                    Answer a few questions and we’ll match you with MBA programs
-                    that fit your goals, budget, and schedule.
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#d9dce6] bg-[#f5f6fa] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
+                    Your MBA journey
+                  </span>
+                  <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">Find your perfect MBA</h1>
+                  <p className="mt-3 text-sm text-[#5a6072]">
+                    Answer a few questions and we’ll match you with MBA programs that fit your goals, budget, and schedule.
                   </p>
                 </div>
-                <div className="rounded-full border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 85%, white 15%)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:color-mix(in srgb, var(--color-secondary) 70%, white 30%)] sm:text-sm">
-                  Step {activeStepMeta.number} of {STEPS.length} •{" "}
-                  {activeStepMeta.timeEstimate}
+                <div className="rounded-full border border-[#d9dce6] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#3D38B8] sm:text-sm">
+                  Step {activeStepMeta.number} of {STEPS.length} • {activeStepMeta.timeEstimate}
                 </div>
               </div>
-              <div className="mt-6 h-2 overflow-hidden rounded-full bg-[color:color-mix(in srgb, var(--color-secondary) 12%, transparent)]">
+              <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#d9dce6]">
                 <div
-                  className="h-full bg-[color:var(--color-accent)] transition-all duration-300"
+                  className="h-full bg-[#3D38B8] transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
           </section>
 
-          <section className="bg-[var(--surface-subtle)] pb-24">
+          <section className="py-16" id="lead-form">
             <div className="section-container max-w-3xl">
               {!isContactStep && currentQuestion?.type === "choice" && (
-                <div className="surface-card p-8">
+                <div className="rounded-3xl border border-[#d9dce6] bg-white p-8 shadow-sm">
                   <div className="flex flex-col gap-3">
-                    <span className="eyebrow">{activeStepMeta.title}</span>
-                    <h2 className="text-2xl font-semibold text-[color:var(--color-secondary)]">
-                      {currentQuestion.title}
-                    </h2>
+                    <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
+                      {activeStepMeta.title}
+                    </span>
+                    <h2 className="text-2xl font-semibold">{currentQuestion.title}</h2>
                     {currentQuestion.description && (
-                      <p className="text-sm text-[color:color-mix(in srgb, var(--color-secondary) 62%, white 38%)]">
-                        {currentQuestion.description}
-                      </p>
+                      <p className="text-sm text-[#5a6072]">{currentQuestion.description}</p>
                     )}
                   </div>
-                  <div className="mt-6 flex flex-col gap-2.5">
+                  <div className="mt-6 flex flex-col gap-3">
                     {currentQuestion.options.map((option) => {
-                      const optionKey = `${String(currentQuestion.key)}:${
-                        option.value
-                      }`;
-                      const isSelected =
-                        formData[currentQuestion.key] === option.value;
+                      const optionKey = `${String(currentQuestion.key)}:${option.value}`;
+                      const isSelected = formData[currentQuestion.key] === option.value;
                       const isBlinking = blinkingChoice === optionKey;
                       return (
                         <button
                           key={option.value}
                           type="button"
-                          className={`choice-pill ${
-                            isBlinking ? "animate-choice-blink" : ""
-                          }`}
-                          data-state={isSelected ? "selected" : "idle"}
-                          onClick={() =>
-                            handleChoiceSelect(currentQuestion, option)
-                          }
+                          onClick={() => handleChoiceSelect(currentQuestion, option)}
+                          className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8] ${
+                            isSelected ? "border-[#3D38B8] bg-[#f5f6fa] text-[#3D38B8]" : "border-[#d9dce6] bg-white"
+                          } ${isBlinking ? "animate-pulse" : ""}`}
                         >
-                          <span className="flex flex-col">
-                            <span className="text-sm font-semibold">
-                              {option.label}
-                            </span>
+                          <span
+                            className={`mt-1 inline-flex h-2 w-2 rounded-full ${
+                              isSelected ? "bg-[#ED1C24]" : "bg-[#d9dce6]"
+                            }`}
+                            aria-hidden
+                          />
+                          <span className="flex-1">
+                            <span className="block text-sm font-semibold text-[#10131a]">{option.label}</span>
                             {option.helper && (
-                              <span className="mt-1 text-xs text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                                {option.helper}
-                              </span>
+                              <span className="mt-1 block text-xs text-[#5a6072]">{option.helper}</span>
                             )}
                           </span>
-                          <span
-                            aria-hidden
-                            className="ml-auto text-base text-[color:color-mix(in srgb, var(--color-secondary) 68%, white 32%)]"
-                          >
-                            ↗
-                          </span>
+                          <span aria-hidden className="ml-auto text-base text-[#9197ad]">↗</span>
                         </button>
                       );
                     })}
                   </div>
                   {currentQuestion.banner && (
-                    <div className="mt-5 inline-flex items-start gap-3 rounded-xl border border-[color:color-mix(in srgb,var(--color-accent)_28%,transparent)] bg-[color:color-mix(in srgb,var(--color-accent)_8%,white_92%)] px-3.5 py-3 shadow-sm">
-                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-accent)] text-[10px] font-bold text-white">
-                        ✓
-                      </span>
-                      <div>
-                        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-[color:color-mix(in srgb, var(--color-accent) 85%, black 15%)]">
+                    <div className="mt-6 rounded-2xl border border-[#d9dce6] bg-[#f5f6fa] px-4 py-3 text-sm text-[#5a6072]">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src="/images/icons8-gift-96.png"
+                          alt="Bonus gift icon"
+                          width={32}
+                          height={32}
+                          className="h-8 w-8"
+                        />
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3D38B8]">
                           {currentQuestion.banner.title}
                         </p>
-                        <p className="mt-1 text-[0.8125rem] leading-snug text-[color:color-mix(in srgb, var(--color-secondary) 75%, white 25%)]">
-                          {currentQuestion.banner.description}
-                        </p>
                       </div>
+                      <p className="mt-2">{currentQuestion.banner.description}</p>
                     </div>
                   )}
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#5a6072]">
                     <button
                       type="button"
                       onClick={handleBack}
                       disabled={!canGoBack}
-                      className="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] px-4 py-2 font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in srgb, var(--color-secondary) 70%, white 30%)] disabled:opacity-40"
+                      className="inline-flex items-center gap-2 rounded-full border border-[#d9dce6] px-4 py-2 font-semibold uppercase tracking-[0.2em] text-[#3D38B8] disabled:opacity-40"
                     >
                       ← Back
                     </button>
-                    <span>
-                      Moves to the next question after your selection.
-                    </span>
+                    <span>Moves to the next question after your selection.</span>
                   </div>
                 </div>
               )}
 
               {!isContactStep && currentQuestion?.type === "info" && (
-                <div className="surface-card space-y-6 p-8">
+                <div className="rounded-3xl border border-[#d9dce6] bg-white p-8 shadow-sm">
                   <div className="space-y-3">
-                    <span className="eyebrow">{activeStepMeta.title}</span>
-                    <h2 className="text-2xl font-semibold text-[color:var(--color-secondary)]">
-                      {currentQuestion.title}
-                    </h2>
-                    <p className="text-sm text-[color:color-mix(in srgb, var(--color-secondary) 62%, white 38%)]">
-                      {currentQuestion.description}
-                    </p>
+                    <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
+                      {activeStepMeta.title}
+                    </span>
+                    <h2 className="text-2xl font-semibold">{currentQuestion.title}</h2>
+                    <p className="text-sm text-[#5a6072]">{currentQuestion.description}</p>
                   </div>
                   {currentQuestion.highlights && (
-                    <ul className="space-y-3 text-sm text-[color:color-mix(in srgb, var(--color-secondary) 65%, white 35%)]">
+                    <ul className="mt-6 space-y-3 text-sm text-[#5a6072]">
                       {currentQuestion.highlights.map((item) => (
                         <li key={item} className="flex gap-3">
-                          <span
-                            aria-hidden
-                            className="mt-1 inline-block h-2 w-2 rounded-full bg-[color:var(--color-accent)]"
-                          />
+                          <span aria-hidden className="mt-1 inline-block h-2 w-2 rounded-full bg-[#3D38B8]" />
                           {item}
                         </li>
                       ))}
                     </ul>
                   )}
-                  <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
+                  <div className="mt-8 flex flex-wrap items-center justify-between gap-4 text-xs text-[#5a6072]">
                     <button
                       type="button"
                       onClick={handleBack}
                       disabled={!canGoBack}
-                      className="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] px-4 py-2 font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in srgb, var(--color-secondary) 70%, white 30%)] disabled:opacity-40"
+                      className="inline-flex items-center gap-2 rounded-full border border-[#d9dce6] px-4 py-2 font-semibold uppercase tracking-[0.2em] text-[#3D38B8] disabled:opacity-40"
                     >
                       ← Back
                     </button>
                     <button
                       type="button"
                       onClick={handleContinue}
-                      className="inline-flex items-center gap-2 rounded-full bg-[color:var(--color-secondary)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-primary)]"
+                      className="inline-flex items-center gap-2 rounded-full bg-[#3D38B8] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
                     >
                       Continue →
                     </button>
@@ -769,185 +749,104 @@ export default function LeadFormPage() {
               )}
 
               {isContactStep && (
-                <form
-                  onSubmit={handleSubmit}
-                  className="surface-card space-y-6 p-8"
-                >
+                <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[#d9dce6] bg-white p-8 shadow-sm">
                   <div className="space-y-3">
-                    <span className="eyebrow">{activeStepMeta.title}</span>
-                    <h2 className="text-2xl font-semibold text-[color:var(--color-secondary)]">
-                      Where can we send your curated roadmap?
-                    </h2>
-                    <p className="text-sm text-[color:color-mix(in srgb, var(--color-secondary) 62%, white 38%)]">
-                      We share your shortlist instantly and follow up with a
-                      counsellor call in your preferred window.
+                    <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
+                      {activeStepMeta.title}
+                    </span>
+                    <h2 className="text-2xl font-semibold">Where can we send your curated roadmap?</h2>
+                    <p className="text-sm text-[#5a6072]">
+                      We share your shortlist instantly and follow up with a counsellor call in your preferred window.
                     </p>
                   </div>
 
                   {submitError && (
-                    <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800">
+                    <div className="rounded-lg border border-[#edb1b3] bg-[#fdecee] p-4 text-sm text-[#b8161b]">
                       {submitError}
                     </div>
                   )}
 
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                        Full name *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.fullName}
-                        onChange={(e) =>
-                          updateField("fullName", e.target.value)
-                        }
-                        required
-                        placeholder="Your name"
-                        className="mt-2 w-full rounded-xl border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 92%, white 8%)] px-4 py-3 text-sm text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                      {errors.fullName && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.fullName[0]}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => updateField("email", e.target.value)}
-                        required
-                        placeholder="name@email.com"
-                        className="mt-2 w-full rounded-xl border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 92%, white 8%)] px-4 py-3 text-sm text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                      {errors.email && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.email[0]}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                        WhatsApp number *
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => updateField("phone", e.target.value)}
-                        required
-                        placeholder="+91"
-                        className="mt-2 w-full rounded-xl border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 92%, white 8%)] px-4 py-3 text-sm text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                      {errors.phone && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.phone[0]}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                        Date of birth
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.dob}
-                        onChange={(e) => updateField("dob", e.target.value)}
-                        placeholder="YYYY-MM-DD"
-                        className="mt-2 w-full rounded-xl border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 92%, white 8%)] px-4 py-3 text-sm text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                      {errors.dob && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.dob[0]}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                        Gender
-                      </label>
-                      <select
-                        value={formData.gender}
-                        onChange={(e) => updateField("gender", e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 92%, white 8%)] px-4 py-3 text-sm text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      >
-                        <option value="">Select</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                      {errors.gender && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.gender[0]}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                        State *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.state}
-                        onChange={(e) => updateField("state", e.target.value)}
-                        required
-                        placeholder="Your state"
-                        className="mt-2 w-full rounded-xl border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 92%, white 8%)] px-4 py-3 text-sm text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                      {errors.state && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.state[0]}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in srgb, var(--color-secondary) 58%, white 42%)]">
-                        City *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.city}
-                        onChange={(e) => updateField("city", e.target.value)}
-                        required
-                        placeholder="Your city"
-                        className="mt-2 w-full rounded-xl border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] bg-[color:color-mix(in srgb, var(--surface-base) 92%, white 8%)] px-4 py-3 text-sm text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                      {errors.city && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.city[0]}
-                        </p>
-                      )}
-                    </div>
+                    <FieldControl
+                      label="Full name *"
+                      value={formData.fullName}
+                      onChange={(e) => updateField("fullName", e.target.value)}
+                      placeholder="Your name"
+                      required
+                      error={errors.fullName}
+                      className="sm:col-span-2"
+                    />
+                    <FieldControl
+                      label="Email *"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => updateField("email", e.target.value)}
+                      placeholder="name@email.com"
+                      required
+                      error={errors.email}
+                    />
+                    <FieldControl
+                      label="WhatsApp number *"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => updateField("phone", e.target.value)}
+                      placeholder="+91"
+                      required
+                      error={errors.phone}
+                    />
+                    <FieldControl
+                      label="Date of birth"
+                      type="date"
+                      value={formData.dob}
+                      onChange={(e) => updateField("dob", e.target.value)}
+                    />
+                    <FieldControl
+                      label="State"
+                      value={formData.state}
+                      onChange={(e) => updateField("state", e.target.value)}
+                    />
+                    <FieldControl
+                      label="City"
+                      value={formData.city}
+                      onChange={(e) => updateField("city", e.target.value)}
+                    />
+                    <FieldControl
+                      label="Preferred contact window"
+                      value={formData.bestContactWindow}
+                      onChange={(e) => updateField("bestContactWindow", e.target.value)}
+                      placeholder="Morning / Evening / Weekend"
+                      className="sm:col-span-2"
+                    />
+                    <FieldControl
+                      label="Source"
+                      value={formData.source}
+                      onChange={(e) => updateField("source", e.target.value)}
+                      placeholder="How did you hear about us?"
+                    />
+                    <FieldControl
+                      label="UTM campaign"
+                      value={formData.utmCampaign}
+                      onChange={(e) => updateField("utmCampaign", e.target.value)}
+                      placeholder="Optional tracking"
+                    />
                   </div>
 
-                  <div className="rounded-2xl border border-[color:color-mix(in srgb, var(--color-secondary) 12%, transparent)] bg-[linear-gradient(135deg, color-mix(in srgb, var(--surface-base) 90%, white 10%) 0%, color-mix(in srgb, var(--color-accent) 16%, transparent) 100%)] p-5 text-sm text-[color:color-mix(in srgb, var(--color-secondary) 70%, white 30%)]">
-                    <p className="font-semibold uppercase tracking-[0.26em] text-[color:color-mix(in srgb, var(--color-secondary) 60%, white 40%)]">
-                      Privacy promise
-                    </p>
-                    <p className="mt-2">
-                      Your data powers personalised recommendations only. We
-                      never sell or spam—unsubscribe anytime.
-                    </p>
+                  <div className="rounded-2xl border border-[#d9dce6] bg-[#f5f6fa] p-5 text-sm text-[#5a6072]">
+                    <p className="font-semibold uppercase tracking-[0.18em] text-[#3D38B8]">What happens next</p>
+                    <ul className="mt-3 space-y-2">
+                      <li>• Personalised shortlist mailed within 2 minutes</li>
+                      <li>• Counsellor follow-up in your preferred window</li>
+                      <li>• Access to scholarships and financing partners</li>
+                    </ul>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in srgb, var(--color-secondary) 18%, transparent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in srgb, var(--color-secondary) 70%, white 30%)]"
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isPending}
-                      className="inline-flex items-center gap-2 rounded-full bg-[color:var(--color-secondary)] px-6 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:-translate-y-0.5 disabled:opacity-50"
-                    >
-                      {isPending ? "Submitting…" : "Get my shortlist"}
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#3D38B8] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#514EA1] disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8]"
+                  >
+                    {isPending ? "Submitting…" : "Send my tailored shortlist"}
+                  </button>
                 </form>
               )}
             </div>
@@ -956,4 +855,43 @@ export default function LeadFormPage() {
       )}
     </div>
   );
+}
+
+function FieldControl({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required,
+  error,
+  className = "",
+}: {
+  label: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+  error?: string[];
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[#514EA1]">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="mt-2 w-full rounded-xl border border-[#d9dce6] bg-white px-4 py-3 text-sm text-[#10131a] focus:outline-none focus:ring-2 focus:ring-[#3D38B8]"
+      />
+      {error && <p className="mt-1 text-xs text-[#b8161b]">{error[0]}</p>}
+    </div>
+  );
+}
+
+function formatINR(n: number) {
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n || 0);
 }

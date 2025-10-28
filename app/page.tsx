@@ -1,21 +1,39 @@
-import HeroSection from "@/components/sections/HeroSection";
-import TrustStrip from "@/components/sections/TrustStrip";
-import WhyReviveSection from "@/components/sections/WhyReviveSection";
-import ProgramDiscoverySection from "@/components/sections/ProgramDiscoverySection";
-import GuidanceToolsSection from "@/components/sections/GuidanceToolsSection";
-import LeadFormSection from "@/components/sections/LeadFormSection";
+// app/page.tsx
 import FaqSection from "@/components/sections/FaqSection";
+import { ExpertGuidanceSection } from "@/components/sections/ExpertGuidanceSection";
+import { FeaturedUniversitiesSection } from "./(site)/components/featured-universities";
+import { FeesCalculatorTeaser } from "./(site)/components/fees-calculator-teaser";
+import { HeroNew } from "./(site)/components/hero-new";
+import { HowItWorksSection } from "./(site)/components/how-it-works";
+import { ProgramsSection } from "./(site)/components/programs";
+import { SpecializationsSection } from "./(site)/components/specializations";
+import { TestimonialsSection } from "./(site)/components/testimonials";
+import { TrustApprovalsSection } from "./(site)/components/trust-approvals";
+import { WhyUsSection } from "./(site)/components/why-us";
+import { FAQsSection } from "./(site)/components/faq";
+import { ContactUsSection } from "./(site)/components/contact-us";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--surface-base)] text-[color:var(--color-secondary)]">
-      <HeroSection />
-      <TrustStrip />
-      <WhyReviveSection />
-      <ProgramDiscoverySection />
-      <GuidanceToolsSection />
-      <LeadFormSection />
-      <FaqSection />
-    </div>
+    <>
+      <HeroNew />
+      <FeaturedUniversitiesSection />
+      <SpecializationsSection />
+      <ProgramsSection />
+      {/* <FeesCalculatorTeaser /> */}
+      <HowItWorksSection />
+      <WhyUsSection />
+      <ExpertGuidanceSection />
+      <TestimonialsSection />
+      <FAQsSection
+        title="Frequently asked questions"
+        subtitle="Quick, honest answers about programs, eligibility, and fees."
+      />
+      <ContactUsSection />
+      {/* <TrustApprovalsSection
+        title="Approvals & quality signals"
+        subtitle="We list only accredited programs and surface the right badges clearly."
+      /> */}
+    </>
   );
 }

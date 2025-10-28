@@ -1,8 +1,9 @@
 "use client";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Search, Edit, X, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Edit, Plus, Search, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 // client page uses API routes; no server actions here
 
@@ -307,40 +308,38 @@ export default function AdminProgramsPage() {
   }
 
   return (
-    <section className="bg-[var(--surface-base)] py-4">
-      <div className="section-container">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[color:var(--color-secondary)]">
-              Programs
-            </h1>
-            <p className="mt-2 text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
-              Manage MBA and PGDM programs in your catalog
-            </p>
-          </div>
+    <>
+      <AdminPageHeader
+        title="Programs"
+        description="Manage MBA and PGDM programs in your catalog."
+        actions={
           <button
             onClick={() => setIsCreateOpen(true)}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-[color:var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90"
           >
             <Plus className="h-4 w-4" /> Add program
           </button>
-        </div>
+        }
+      />
 
-        {/* Search Bar */}
-        <div className="mt-8">
-          <div className="relative">
+      <section className="section-container space-y-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_62%,white_38%)]">
+            Showing {filteredPrograms.length} of {programList.length} programs
+          </p>
+          <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]" />
             <input
               type="text"
               placeholder="Search programs, institutions, or degree types..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] pl-10 pr-4 py-3 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] py-3 pl-10 pr-4 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
             />
           </div>
         </div>
 
-        <div className="mt-8">
+        <div>
           {filteredPrograms.length > 0 ? (
             <div className="surface-card overflow-hidden">
               <table className="w-full">
@@ -438,428 +437,428 @@ export default function AdminProgramsPage() {
           )}
         </div>
 
-        {isCreateOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[var(--surface-subtle)]">
-              <div className="flex items-center justify-between border-b border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] p-6">
-                <h2 className="text-xl font-bold text-[color:var(--color-secondary)]">
-                  Add Program
-                </h2>
-                <button
-                  onClick={() => setIsCreateOpen(false)}
-                  className="rounded-md border border-[color:color-mix(in_srgb,var(--color-secondary)_14%,transparent)] px-3 py-1 text-xs font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_75%,white_25%)] hover:text-[color:var(--color-secondary)]"
-                >
-                  Close
-                </button>
-              </div>
-              <form
-                className="p-6 space-y-6"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  setCreateError(null);
-                  if (
-                    !createForm.institutionId ||
-                    !createForm.title ||
-                    !createForm.degreeType
-                  ) {
-                    setCreateError(
-                      "Institution, Title and Degree Type are required"
-                    );
-                    return;
-                  }
-                  setIsSubmittingCreate(true);
-                  try {
-                    const payload = {
-                      institutionId: parseInt(createForm.institutionId, 10),
-                      degreeType: createForm.degreeType,
-                      title: createForm.title,
-                      durationMonths: createForm.durationMonths
-                        ? parseInt(createForm.durationMonths, 10)
-                        : null,
-                      deliveryMode: createForm.deliveryMode || null,
-                      totalFee: createForm.totalFee
-                        ? parseInt(createForm.totalFee, 10)
-                        : null,
-                      applicationFee: createForm.applicationFee
-                        ? parseInt(createForm.applicationFee, 10)
-                        : null,
-                      emiAvailable: !!createForm.emiAvailable,
-                      isFeatured: !!createForm.isFeatured,
-                      brochureUrl: createForm.brochureUrl || null,
-                      heroImage: createForm.heroImage || null,
-                      applyUrl: createForm.applyUrl || null,
-                      applicationDeadline:
-                        createForm.applicationDeadline || null,
-                      highlights: createForm.highlights || null,
-                      outcomes: createForm.outcomes || null,
-                      eligibility: createForm.eligibility || null,
-                      curriculum: createForm.curriculum || null,
-                      workExperienceMinYears: createForm.workExperienceMinYears
-                        ? parseInt(createForm.workExperienceMinYears, 10)
-                        : null,
-                    };
+    </section>
+  {isCreateOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[var(--surface-subtle)]">
+        <div className="flex items-center justify-between border-b border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] p-6">
+          <h2 className="text-xl font-bold text-[color:var(--color-secondary)]">
+            Add Program
+          </h2>
+          <button
+            onClick={() => setIsCreateOpen(false)}
+            className="rounded-md border border-[color:color-mix(in_srgb,var(--color-secondary)_14%,transparent)] px-3 py-1 text-xs font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_75%,white_25%)] hover:text-[color:var(--color-secondary)]"
+          >
+            Close
+          </button>
+        </div>
+        <form
+          className="p-6 space-y-6"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setCreateError(null);
+            if (
+              !createForm.institutionId ||
+              !createForm.title ||
+              !createForm.degreeType
+            ) {
+              setCreateError(
+                "Institution, Title and Degree Type are required"
+              );
+              return;
+            }
+            setIsSubmittingCreate(true);
+            try {
+              const payload = {
+                institutionId: parseInt(createForm.institutionId, 10),
+                degreeType: createForm.degreeType,
+                title: createForm.title,
+                durationMonths: createForm.durationMonths
+                  ? parseInt(createForm.durationMonths, 10)
+                  : null,
+                deliveryMode: createForm.deliveryMode || null,
+                totalFee: createForm.totalFee
+                  ? parseInt(createForm.totalFee, 10)
+                  : null,
+                applicationFee: createForm.applicationFee
+                  ? parseInt(createForm.applicationFee, 10)
+                  : null,
+                emiAvailable: !!createForm.emiAvailable,
+                isFeatured: !!createForm.isFeatured,
+                brochureUrl: createForm.brochureUrl || null,
+                heroImage: createForm.heroImage || null,
+                applyUrl: createForm.applyUrl || null,
+                applicationDeadline:
+                  createForm.applicationDeadline || null,
+                highlights: createForm.highlights || null,
+                outcomes: createForm.outcomes || null,
+                eligibility: createForm.eligibility || null,
+                curriculum: createForm.curriculum || null,
+                workExperienceMinYears: createForm.workExperienceMinYears
+                  ? parseInt(createForm.workExperienceMinYears, 10)
+                  : null,
+              };
 
-                    const res = await fetch("/api/admin/programs", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(payload),
-                    });
-                    if (!res.ok) {
-                      const body = await res.json().catch(() => ({}));
-                      setCreateError(
-                        (body as { message?: string }).message ||
-                          "Failed to create program"
-                      );
-                      setIsSubmittingCreate(false);
-                      return;
-                    }
+              const res = await fetch("/api/admin/programs", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+              if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                setCreateError(
+                  (body as { message?: string }).message ||
+                    "Failed to create program"
+                );
+                setIsSubmittingCreate(false);
+                return;
+              }
 
-                    // refresh list
-                    const response = await fetch("/api/admin/programs");
-                    const { data } = (await response.json()) as {
-                      data: Program[];
-                    };
-                    setProgramList(data);
-                    setFilteredPrograms(data);
-                    setIsCreateOpen(false);
-                  } catch (err) {
-                    setCreateError("Failed to create program");
-                  } finally {
-                    setIsSubmittingCreate(false);
-                  }
-                }}
+              // refresh list
+              const response = await fetch("/api/admin/programs");
+              const { data } = (await response.json()) as {
+                data: Program[];
+              };
+              setProgramList(data);
+              setFilteredPrograms(data);
+              setIsCreateOpen(false);
+            } catch (err) {
+              setCreateError("Failed to create program");
+            } finally {
+              setIsSubmittingCreate(false);
+            }
+          }}
+        >
+          {createError && (
+            <div className="rounded-md border border-[color:color-mix(in_srgb,crimson_45%,transparent)] bg-[color:color-mix(in_srgb,crimson_10%,transparent)] p-3 text-sm text-[color:color-mix(in_srgb,crimson_70%,white_30%)]">
+              {createError}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Institution
+              </label>
+              <select
+                value={createForm.institutionId}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    institutionId: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+                required
               >
-                {createError && (
-                  <div className="rounded-md border border-[color:color-mix(in_srgb,crimson_45%,transparent)] bg-[color:color-mix(in_srgb,crimson_10%,transparent)] p-3 text-sm text-[color:color-mix(in_srgb,crimson_70%,white_30%)]">
-                    {createError}
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Institution
-                    </label>
-                    <select
-                      value={createForm.institutionId}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          institutionId: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      required
-                    >
-                      <option value="">Select institution</option>
-                      {institutions.map((inst) => (
-                        <option key={inst.id} value={inst.id.toString()}>
-                          {inst.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Degree Type
-                    </label>
-                    <input
-                      type="text"
-                      value={createForm.degreeType}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          degreeType: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      value={createForm.title}
-                      onChange={(e) =>
-                        setCreateForm({ ...createForm, title: e.target.value })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Duration (months)
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.durationMonths}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          durationMonths: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Delivery Mode
-                    </label>
-                    <select
-                      value={createForm.deliveryMode}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          deliveryMode: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    >
-                      <option value="">Select mode</option>
-                      <option value="online">Online</option>
-                      <option value="blended">Blended</option>
-                      <option value="weekend">Weekend</option>
-                      <option value="on-campus">On-campus</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Total Fee (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.totalFee}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          totalFee: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Application Fee (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.applicationFee}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          applicationFee: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                  <div className="col-span-2 grid grid-cols-2 gap-4">
-                    <label className="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--color-secondary)]">
-                      <input
-                        type="checkbox"
-                        checked={createForm.emiAvailable}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            emiAvailable: e.target.checked,
-                          })
-                        }
-                        className="h-4 w-4 rounded border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)]"
-                      />
-                      EMI Available
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--color-secondary)]">
-                      <input
-                        type="checkbox"
-                        checked={createForm.isFeatured}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            isFeatured: e.target.checked,
-                          })
-                        }
-                        className="h-4 w-4 rounded border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)]"
-                      />
-                      Featured
-                    </label>
-                  </div>
-                  <div className="col-span-2 grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                        Brochure URL
-                      </label>
-                      <input
-                        type="text"
-                        value={createForm.brochureUrl}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            brochureUrl: e.target.value,
-                          })
-                        }
-                        className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                        Hero Image
-                      </label>
-                      <input
-                        type="text"
-                        value={createForm.heroImage}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            heroImage: e.target.value,
-                          })
-                        }
-                        className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                        Apply URL
-                      </label>
-                      <input
-                        type="text"
-                        value={createForm.applyUrl}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            applyUrl: e.target.value,
-                          })
-                        }
-                        className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                        Application Deadline
-                      </label>
-                      <input
-                        type="date"
-                        value={createForm.applicationDeadline}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            applicationDeadline: e.target.value,
-                          })
-                        }
-                        className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Highlights
-                    </label>
-                    <textarea
-                      value={createForm.highlights}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          highlights: e.target.value,
-                        })
-                      }
-                      className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Outcomes
-                    </label>
-                    <textarea
-                      value={createForm.outcomes}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          outcomes: e.target.value,
-                        })
-                      }
-                      className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Eligibility
-                    </label>
-                    <textarea
-                      value={createForm.eligibility}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          eligibility: e.target.value,
-                        })
-                      }
-                      className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Curriculum
-                    </label>
-                    <textarea
-                      value={createForm.curriculum}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          curriculum: e.target.value,
-                        })
-                      }
-                      className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
-                      Min Work Exp (years)
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.workExperienceMinYears}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          workExperienceMinYears: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
-                    />
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateOpen(false)}
-                    className="rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] px-6 py-2.5 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:bg-[color:color-mix(in_srgb,var(--color-secondary)_8%,transparent)]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingCreate}
-                    className="rounded-lg bg-[color:var(--color-accent)] px-6 py-2.5 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90 disabled:opacity-60"
-                  >
-                    {isSubmittingCreate ? "Creating..." : "Create Program"}
-                  </button>
-                </div>
-              </form>
+                <option value="">Select institution</option>
+                {institutions.map((inst) => (
+                  <option key={inst.id} value={inst.id.toString()}>
+                    {inst.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Degree Type
+              </label>
+              <input
+                type="text"
+                value={createForm.degreeType}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    degreeType: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Title
+              </label>
+              <input
+                type="text"
+                value={createForm.title}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, title: e.target.value })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Duration (months)
+              </label>
+              <input
+                type="number"
+                value={createForm.durationMonths}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    durationMonths: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Delivery Mode
+              </label>
+              <select
+                value={createForm.deliveryMode}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    deliveryMode: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              >
+                <option value="">Select mode</option>
+                <option value="online">Online</option>
+                <option value="blended">Blended</option>
+                <option value="weekend">Weekend</option>
+                <option value="on-campus">On-campus</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Total Fee (₹)
+              </label>
+              <input
+                type="number"
+                value={createForm.totalFee}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    totalFee: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Application Fee (₹)
+              </label>
+              <input
+                type="number"
+                value={createForm.applicationFee}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    applicationFee: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
+            </div>
+            <div className="col-span-2 grid grid-cols-2 gap-4">
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--color-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={createForm.emiAvailable}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      emiAvailable: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 rounded border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)]"
+                />
+                EMI Available
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--color-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={createForm.isFeatured}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      isFeatured: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 rounded border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)]"
+                />
+                Featured
+              </label>
+            </div>
+            <div className="col-span-2 grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                  Brochure URL
+                </label>
+                <input
+                  type="text"
+                  value={createForm.brochureUrl}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      brochureUrl: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                  Hero Image
+                </label>
+                <input
+                  type="text"
+                  value={createForm.heroImage}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      heroImage: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                  Apply URL
+                </label>
+                <input
+                  type="text"
+                  value={createForm.applyUrl}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      applyUrl: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                  Application Deadline
+                </label>
+                <input
+                  type="date"
+                  value={createForm.applicationDeadline}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      applicationDeadline: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+                />
+              </div>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Highlights
+              </label>
+              <textarea
+                value={createForm.highlights}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    highlights: e.target.value,
+                  })
+                }
+                className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Outcomes
+              </label>
+              <textarea
+                value={createForm.outcomes}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    outcomes: e.target.value,
+                  })
+                }
+                className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Eligibility
+              </label>
+              <textarea
+                value={createForm.eligibility}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    eligibility: e.target.value,
+                  })
+                }
+                className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Curriculum
+              </label>
+              <textarea
+                value={createForm.curriculum}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    curriculum: e.target.value,
+                  })
+                }
+                className="min-h-20 w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[color:var(--color-secondary)] mb-2">
+                Min Work Exp (years)
+              </label>
+              <input
+                type="number"
+                value={createForm.workExperienceMinYears}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    workExperienceMinYears: e.target.value,
+                  })
+                }
+                className="w-full rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] bg-[var(--surface-subtle)] px-4 py-2.5 text-[color:var(--color-secondary)] focus:outline-2 focus:outline-[var(--color-ring)]"
+              />
             </div>
           </div>
-        )}
-
-        {/* Edit Dialog */}
-        <EditDialog
-          program={editingProgram}
-          isOpen={isEditDialogOpen}
-          onClose={handleCloseEdit}
-          onSave={handleSave}
-        />
+          <div className="mt-4 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setIsCreateOpen(false)}
+              className="rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_25%,transparent)] px-6 py-2.5 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:bg-[color:color-mix(in_srgb,var(--color-secondary)_8%,transparent)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmittingCreate}
+              className="rounded-lg bg-[color:var(--color-accent)] px-6 py-2.5 text-sm font-semibold text-[var(--color-accent-foreground)] transition hover:opacity-90 disabled:opacity-60"
+            >
+              {isSubmittingCreate ? "Creating..." : "Create Program"}
+            </button>
+          </div>
+        </form>
       </div>
-    </section>
+    </div>
+  )}
+
+  {/* Edit Dialog */}
+  <EditDialog
+    program={editingProgram}
+    isOpen={isEditDialogOpen}
+    onClose={handleCloseEdit}
+    onSave={handleSave}
+  />
+</>
   );
 }
