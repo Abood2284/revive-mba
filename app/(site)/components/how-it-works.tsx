@@ -21,7 +21,7 @@ export function HowItWorksSection() {
     },
     {
       title: "Get a curated shortlist",
-      body: "We match accredited online MBAs to your profile—fees, duration, eligibility, deadlines.",
+      body: "We match accredited online programs to your profile—fees, duration, eligibility, deadlines.",
       meta: "Human-curated",
       icon: ListChecks,
     },

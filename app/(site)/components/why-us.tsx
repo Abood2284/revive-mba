@@ -45,7 +45,7 @@ export function WhyUsSection({ items = DEFAULT_ITEMS }: { items?: Item[] }) {
               aria-hidden
               className="inline-flex h-1.5 w-1.5 rounded-full bg-[#3D38B8]"
             />
-            Why students pick Revive MBA
+            Why students pick Revive Education
           </span>
           <h2 className="mt-5 text-3xl font-semibold leading-tight text-[#10131a] md:text-4xl">
             Platform that supports you End-to-End

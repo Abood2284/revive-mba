@@ -14,13 +14,12 @@ export type Program = {
   nextIntake?: string;
   badges?: string[];
   heroImage?: string;
+  degreeType?: string;
 };
 
 type Props = {
   initial?: {
     maxFee?: number;
-    mode?: "" | "online" | "blended" | "distance";
-    duration?: "" | "12-18" | "18-24" | "24-30";
     specialization?: string;
     q?: string;
   };
@@ -40,10 +39,6 @@ export function ProgramsSection({ initial }: Props) {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
   const [maxFee, setMaxFee] = React.useState<number>(initial?.maxFee ?? 600000);
-  const [mode, setMode] = React.useState<string>(initial?.mode ?? "");
-  const [duration, setDuration] = React.useState<string>(
-    initial?.duration ?? ""
-  );
   const [spec, setSpec] = React.useState<string>(initial?.specialization ?? "");
   const [sort, setSort] = React.useState<string>("relevance");
   const [search, setSearch] = React.useState<string>(initial?.q ?? "");
@@ -114,23 +109,24 @@ export function ProgramsSection({ initial }: Props) {
   }, [mobileFiltersOpen]);
 
   const filtered = React.useMemo(() => {
-    const [dMin, dMax] = parseRange(duration);
-    return programs
-      .filter((p) => {
-        const feeOk = p.totalFeeINR <= maxFee;
-        const modeOk = !mode || p.mode === mode;
-        const durOk =
-          !duration || (p.durationMonths >= dMin && p.durationMonths <= dMax);
-        const specOk = !spec || p.specialization === spec;
-        const queryOk =
-          !search ||
-          (p.title + " " + p.university + " " + p.specialization)
-            .toLowerCase()
-            .includes(search.toLowerCase());
-        return feeOk && modeOk && durOk && specOk && queryOk;
-      })
-      .sort(sorter(sort));
-  }, [programs, maxFee, mode, duration, spec, search, sort]);
+    const filteredPrograms = programs.filter((p) => {
+      const feeOk = p.totalFeeINR <= maxFee;
+      const specOk = !spec || p.specialization === spec;
+      const queryOk =
+        !search ||
+        (p.title + " " + p.university + " " + p.specialization)
+          .toLowerCase()
+          .includes(search.toLowerCase());
+      return feeOk && specOk && queryOk;
+    });
+
+    // If user hasn't changed sort from default "relevance", maintain API order
+    // Otherwise apply user's selected sort
+    if (sort === "relevance") {
+      return filteredPrograms;
+    }
+    return filteredPrograms.sort(sorter(sort));
+  }, [programs, maxFee, spec, search, sort]);
 
   const topSlice = 6;
   const visiblePrograms = React.useMemo(() => {
@@ -150,7 +146,8 @@ export function ProgramsSection({ initial }: Props) {
     if (isDesktop) {
       const gridClasses =
         "grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6";
-      const actionsClasses = "mt-6 flex flex-wrap items-center gap-2";
+      const actionsClasses =
+        "mt-6 flex flex-wrap items-center justify-between gap-2";
       const resetButtonClasses =
         "inline-flex items-center justify-center rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_20%,transparent)] px-5 py-2 text-sm font-semibold text-[color:var(--color-secondary)] transition hover:border-[color:color-mix(in_srgb,var(--color-secondary)_35%,transparent)]";
       const livePillClasses =
@@ -189,35 +186,9 @@ export function ProgramsSection({ initial }: Props) {
               />
             </Field>
 
-            <Field label="Mode">
-              <select
-                id="mode"
-                value={mode}
-                onChange={(e) => setMode(e.target.value)}
-                className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              >
-                <option value="">All modes</option>
-                <option value="online">Online</option>
-                <option value="blended">Blended</option>
-                <option value="distance">Distance</option>
-              </select>
-            </Field>
+            {/* Mode and Duration filters removed */}
 
-            <Field label="Duration">
-              <select
-                id="duration"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              >
-                <option value="">All durations</option>
-                <option value="12-18">12–18 months</option>
-                <option value="18-24">18–24 months</option>
-                <option value="24-30">24–30 months</option>
-              </select>
-            </Field>
-
-            <Field label="Specialisation">
+            <Field label="Specialisation" className="xl:col-span-2">
               <select
                 id="spec"
                 value={spec}
@@ -272,31 +243,53 @@ export function ProgramsSection({ initial }: Props) {
           </div>
 
           <div className={actionsClasses}>
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setMaxFee(600000);
-                setMode("");
-                setDuration("");
-                setSpec("");
-                setSort("relevance");
-              }}
-              className={resetButtonClasses}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setMaxFee(600000);
+                  setSpec("");
+                  setSort("relevance");
+                }}
+                className={resetButtonClasses}
+              >
+                Reset filters
+              </button>
+              <div className={livePillClasses}>
+                <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--color-accent)]" />
+                Live updated
+              </div>
+              <div className={countPillClasses}>
+                {loading
+                  ? "Loading…"
+                  : `${filteredCount} ${
+                      filteredCount === 1 ? "program" : "programs"
+                    }`}
+              </div>
+            </div>
+            <a
+              href="#programs-list"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ED1C24] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#b8161b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ED1C24]"
             >
-              Reset filters
-            </button>
-            <div className={livePillClasses}>
-              <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--color-accent)]" />
-              Live updated
-            </div>
-            <div className={countPillClasses}>
-              {loading
-                ? "Loading…"
-                : `${filteredCount} ${
-                    filteredCount === 1 ? "program" : "programs"
-                  }`}
-            </div>
+              Show Programs
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="-mr-1"
+              >
+                <path
+                  d="M13 5l7 7-7 7M5 12h14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </a>
           </div>
         </>
       );
@@ -351,20 +344,6 @@ export function ProgramsSection({ initial }: Props) {
           </Field>
 
           <div className="flex flex-wrap gap-3">
-            <Field label="Duration" className="flex-1 min-w-[140px]">
-              <select
-                id="duration"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2 text-sm text-[color:var(--color-secondary)] shadow-[0_10px_18px_-16px_rgba(16,19,26,0.2)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
-              >
-                <option value="">All durations</option>
-                <option value="12-18">12–18 months</option>
-                <option value="18-24">18–24 months</option>
-                <option value="24-30">24–30 months</option>
-              </select>
-            </Field>
-
             <Field label="Sort by" className="flex-1 min-w-[140px]">
               <select
                 id="sort"
@@ -406,8 +385,6 @@ export function ProgramsSection({ initial }: Props) {
             onClick={() => {
               setSearch("");
               setMaxFee(600000);
-              setMode("");
-              setDuration("");
               setSpec("");
               setSort("relevance");
             }}
@@ -512,7 +489,7 @@ export function ProgramsSection({ initial }: Props) {
             </button>
           </div>
 
-          <div>
+          <div id="programs-list">
             {loading ? (
               <LoadingState />
             ) : error ? (
@@ -593,7 +570,6 @@ function ProgramCard({ program }: { program: Program }) {
     mode,
     durationMonths,
     totalFeeINR,
-    badges,
     heroImage,
   } = program;
 
@@ -619,17 +595,6 @@ function ProgramCard({ program }: { program: Program }) {
           />
         </div>
       ) : null}
-
-      <div className="mb-4 hidden flex-wrap gap-2 md:flex">
-        {badges?.map((b) => (
-          <span
-            key={b}
-            className="rounded-full border border-[#d9dce6] bg-[#f5f6fa] px-3 py-1 text-[11px] uppercase tracking-wide text-[#3D38B8]"
-          >
-            {b}
-          </span>
-        ))}
-      </div>
 
       <h3 className="text-xl font-semibold leading-snug text-[#10131a]">
         {title}
@@ -865,6 +830,12 @@ function normalizeProgram(input: unknown): Program {
       ? heroImageRaw
       : undefined;
 
+  const degreeTypeRaw = value?.degreeType;
+  const degreeType =
+    typeof degreeTypeRaw === "string" && degreeTypeRaw.trim().length > 0
+      ? degreeTypeRaw
+      : undefined;
+
   return {
     id:
       typeof value?.id === "string"
@@ -890,5 +861,6 @@ function normalizeProgram(input: unknown): Program {
         : undefined,
     badges,
     heroImage,
+    degreeType,
   };
 }

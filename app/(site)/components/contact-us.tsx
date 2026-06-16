@@ -41,7 +41,7 @@ export function ContactUsSection() {
             Contact us
           </span>
           <h2 className="mt-2 text-lg font-semibold leading-tight text-[#10131a] md:mt-4 md:text-4xl">
-            Let&rsquo;s connect and guide your MBA journey
+            Let&rsquo;s connect and guide your Online journey
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-[#5a6072] md:mt-4 md:text-base">
             Reach out anytime for counselling support, application guidance, or
@@ -102,8 +102,8 @@ export function ContactUsSection() {
             );
           })}
 
-          <div className="col-span-2 flex h-full flex-col justify-between rounded-2xl border border-[#E4E5F2] bg-[#F7F6FF] p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5 md:col-span-3 md:p-6">
-            <div>
+          <div className="col-span-2 flex h-full flex-col rounded-2xl border border-[#E4E5F2] bg-[#F7F6FF] p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5 md:col-span-3 md:p-6">
+            <div className="flex flex-col space-y-4 md:space-y-6">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#F2F1FF] text-[#3D38B8] md:h-12 md:w-12">
                 <Send
                   className="h-4 w-4 md:h-6 md:w-6"
@@ -111,25 +111,31 @@ export function ContactUsSection() {
                   aria-hidden
                 />
               </span>
-              <h3 className="mt-3 text-sm font-semibold text-[#10131a] md:mt-6 md:text-xl">
-                Admissions Open Join Us
-              </h3>
-              <p className="mt-2 text-xs leading-relaxed text-[#5a6072] md:mt-4 md:text-sm">
-                Share your details and our counsellor will help you shortlist,
-                plan fees, and start your application.
-              </p>
-            </div>
-            <div className="mt-4 md:mt-6">
-              <Link
-                href="/lead-form"
-                className="inline-flex items-center justify-center rounded-full bg-[#3D38B8] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#514EA1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8] md:px-6 md:text-sm"
-              >
-                Apply Now
-              </Link>
-              <p className="mt-2 text-[10px] text-[#9197ad] md:text-xs">
-                Email us anytime at{" "}
-                <span className="font-medium">support@reviveeducation.in</span>
-              </p>
+
+              <div className="space-y-2 md:space-y-3">
+                <h3 className="text-sm font-semibold text-[#10131a] md:text-xl">
+                  Admissions Open Join Us
+                </h3>
+                <p className="text-xs leading-relaxed text-[#5a6072] md:text-sm">
+                  Share your details and our counsellor will help you shortlist,
+                  plan fees, and start your application.
+                </p>
+              </div>
+
+              <div className="mt-auto space-y-3">
+                <Link
+                  href="/lead-form"
+                  className="inline-flex items-center justify-center rounded-full bg-[#3D38B8] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#514EA1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8] md:px-6 md:text-sm"
+                >
+                  Apply Now
+                </Link>
+                <p className="text-[10px] text-[#9197ad] md:text-xs">
+                  Email us anytime at{" "}
+                  <span className="font-medium">
+                    support@reviveeducation.in
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         </div>

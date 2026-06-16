@@ -29,22 +29,14 @@ const heroProofMetrics = [
 export function HeroNew() {
   const router = useRouter();
   const [budget, setBudget] = React.useState(250000);
-  const [duration, setDuration] = React.useState("18-24");
-  const [mode, setMode] = React.useState("online");
   const [spec, setSpec] = React.useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Parse duration range (e.g., "18-24" -> minDuration=18, maxDuration=24)
-    const [minDuration, maxDuration] = duration.split("-").map(Number);
-
     // Build query parameters
     const params = new URLSearchParams();
     params.set("maxFee", budget.toString());
-    params.set("mode", mode);
-    params.set("minDuration", minDuration.toString());
-    params.set("maxDuration", maxDuration.toString());
     if (spec) {
       params.set("specialization", spec);
     }
@@ -59,7 +51,7 @@ export function HeroNew() {
         <div className="mt-8 grid items-center gap-10 md:grid-cols-12">
           <div className="md:col-span-7">
             <h1 className="text-4xl font-semibold leading-tight sm:text-5xl md:text-6xl">
-              Find the right <span className="text-[#ED1C24]">Online MBA</span>{" "}
+              Find the right <span className="text-[#ED1C24]">Online Program</span>{" "}
               without the spin.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-[#514EA1] md:text-lg">
@@ -128,22 +120,15 @@ export function HeroNew() {
 
           <div className="md:col-span-5">
             <form
-              id="quick-finder"
+              id="program-finder"
               onSubmit={handleSubmit}
               className="rounded-2xl border border-[#514EA1] bg-white p-6 shadow-lg"
             >
               <div className="flex items-center justify-between border-b border-[#3D38B8] pb-4">
                 <h2 className="text-lg font-semibold text-[#0b0e17]">
-                  Quick Finder
+                  Let us find the right program for you
                 </h2>
-                <span className="text-xs uppercase tracking-[0.24em] text-[#514EA1]">
-                  2 min setup
-                </span>
               </div>
-              <p className="mt-3 text-xs text-[#514EA1]">
-                Budget, mode, duration, specialisation.
-              </p>
-
               <div className="mt-6 space-y-5">
                 <div>
                   <label
@@ -173,107 +158,64 @@ export function HeroNew() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Field>
-                    <label
-                      htmlFor="mode"
-                      className="block text-sm text-[#0b0e17]"
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <Field>
+                      <label
+                        htmlFor="spec"
+                        className="block text-sm text-[#0b0e17]"
+                      >
+                        Specialisation
+                      </label>
+                      <select
+                        id="spec"
+                        value={spec}
+                        onChange={(e) => setSpec(e.target.value)}
+                        className="mt-2 w-full rounded-lg border border-[#514EA1] bg-white px-3 py-2 text-sm text-[#0b0e17] focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
+                      >
+                        <option value="">Any</option>
+                        <option value="finance">Finance</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="business-analytics">
+                          Business Analytics
+                        </option>
+                        <option value="hr">Human Resources</option>
+                        <option value="operations">Operations</option>
+                        <option value="it">IT & Systems</option>
+                        <option value="healthcare">Healthcare</option>
+                      </select>
+                    </Field>
+                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex whitespace-nowrap items-center justify-center gap-2 rounded-full bg-[#ED1C24] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#b8161b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ED1C24]"
+                  >
+                    Show Programs
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      className="-mr-1"
                     >
-                      Mode
-                    </label>
-                    <select
-                      id="mode"
-                      value={mode}
-                      onChange={(e) => setMode(e.target.value)}
-                      className="mt-2 w-full rounded-lg border border-[#514EA1] bg-white px-3 py-2 text-sm text-[#0b0e17] focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
-                    >
-                      <option value="online">Online</option>
-                      <option value="blended">Blended</option>
-                      <option value="weekend">Weekend</option>
-                      <option value="on-campus">On-campus</option>
-                    </select>
-                  </Field>
-                  <Field>
-                    <label
-                      htmlFor="duration"
-                      className="block text-sm text-[#0b0e17]"
-                    >
-                      Duration
-                    </label>
-                    <select
-                      id="duration"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className="mt-2 w-full rounded-lg border border-[#514EA1] bg-white px-3 py-2 text-sm text-[#0b0e17] focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
-                    >
-                      <option value="12-18">12–18 months</option>
-                      <option value="18-24">18–24 months</option>
-                      <option value="24-30">24–30 months</option>
-                    </select>
-                  </Field>
+                      <path
+                        d="M13 5l7 7-7 7M5 12h14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
-
-                <Field>
-                  <label
-                    htmlFor="spec"
-                    className="block text-sm text-[#0b0e17]"
-                  >
-                    Specialisation
-                  </label>
-                  <select
-                    id="spec"
-                    value={spec}
-                    onChange={(e) => setSpec(e.target.value)}
-                    className="mt-2 w-full rounded-lg border border-[#514EA1] bg-white px-3 py-2 text-sm text-[#0b0e17] focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
-                  >
-                    <option value="">Any</option>
-                    <option value="finance">Finance</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="business-analytics">
-                      Business Analytics
-                    </option>
-                    <option value="hr">Human Resources</option>
-                    <option value="operations">Operations</option>
-                    <option value="it">IT & Systems</option>
-                    <option value="healthcare">Healthcare</option>
-                  </select>
-                </Field>
-
-                <button
-                  type="submit"
-                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#ED1C24] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#b8161b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ED1C24]"
-                >
-                  Show Programs
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="-mr-1"
-                  >
-                    <path
-                      d="M13 5l7 7-7 7M5 12h14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
 
                 <div className="mt-4 flex items-center justify-between text-xs">
                   <a
-                    href="/counseling"
+                    href="#contact"
                     className="rounded text-[#ED1C24] transition hover:text-[#b8161b] focus-visible:outline-2 focus-visible:outline-[#ED1C24]"
                   >
                     Prefer guidance? Talk to a counselor →
-                  </a>
-                  <a
-                    href="/faq"
-                    className="rounded text-[#514EA1] transition hover:text-[#3D38B8] focus-visible:outline-2 focus-visible:outline-[#3D38B8]"
-                  >
-                    FAQs
                   </a>
                 </div>
               </div>
@@ -284,7 +226,6 @@ export function HeroNew() {
     </section>
   );
 }
-
 function Field({ children }: { children: React.ReactNode }) {
   return <div>{children}</div>;
 }
@@ -292,3 +233,4 @@ function Field({ children }: { children: React.ReactNode }) {
 function formatINR(n: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
 }
+

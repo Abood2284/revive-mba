@@ -17,10 +17,10 @@ const STEPS = [
   },
   {
     number: 2,
-    title: "MBA Preferences",
+    title: "Program Preferences",
     fields: 6,
     description:
-      "Share what kind of MBA program you're looking for and your budget.",
+      "Share what kind of program you're looking for and your budget.",
     timeEstimate: "≈60s",
   },
   {
@@ -35,14 +35,15 @@ const STEPS = [
     number: 4,
     title: "Your Personalized Match",
     fields: 0,
-    description: "See how we'll match you with the right MBA programs.",
+    description: "See how we'll match you with the right programs.",
     timeEstimate: "≈20s",
   },
   {
     number: 5,
     title: "Get Your Shortlist",
     fields: 8,
-    description: "Where should we send your personalized MBA recommendations?",
+    description:
+      "Where should we send your personalized program recommendations?",
     timeEstimate: "≈55s",
   },
 ] as const;
@@ -362,7 +363,7 @@ const QUESTIONS: Question[] = [
     step: 4,
     title: "Here's what you'll get",
     description:
-      "Based on your answers, we'll create a personalized MBA shortlist just for you.",
+      "Based on your answers, we'll create a personalized program shortlist just for you.",
     highlights: [
       "Top 3 MBA programs matched to your profile with scholarship chances",
       "Salary projection showing expected income increase after MBA",
@@ -584,9 +585,12 @@ export default function LeadFormPage() {
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#3D38B8] text-2xl text-white shadow">
               ✓
             </div>
-            <h1 className="mt-6 text-4xl font-semibold sm:text-5xl">Thank you for your interest!</h1>
+            <h1 className="mt-6 text-4xl font-semibold sm:text-5xl">
+              Thank you for your interest!
+            </h1>
             <p className="mt-4 text-lg leading-relaxed text-[#5a6072]">
-              Your profile has been submitted successfully. Our AI counsellor is generating your personalised program recommendations.
+              Your profile has been submitted successfully. Our AI counsellor is
+              generating your personalised program recommendations.
             </p>
             <p className="mt-3 text-base font-semibold text-[#ED1C24]">
               Check your inbox within 2 minutes for your detailed shortlist.
@@ -614,15 +618,19 @@ export default function LeadFormPage() {
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div>
                   <span className="inline-flex items-center gap-2 rounded-full border border-[#d9dce6] bg-[#f5f6fa] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
-                    Your MBA journey
+                    Your program journey
                   </span>
-                  <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">Find your perfect MBA</h1>
+                  <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">
+                    Find your perfect program
+                  </h1>
                   <p className="mt-3 text-sm text-[#5a6072]">
-                    Answer a few questions and we’ll match you with MBA programs that fit your goals, budget, and schedule.
+                    Answer a few questions and we’ll match you with programs
+                    that fit your goals, budget, and schedule.
                   </p>
                 </div>
                 <div className="rounded-full border border-[#d9dce6] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#3D38B8] sm:text-sm">
-                  Step {activeStepMeta.number} of {STEPS.length} • {activeStepMeta.timeEstimate}
+                  Step {activeStepMeta.number} of {STEPS.length} •{" "}
+                  {activeStepMeta.timeEstimate}
                 </div>
               </div>
               <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#d9dce6]">
@@ -642,23 +650,34 @@ export default function LeadFormPage() {
                     <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
                       {activeStepMeta.title}
                     </span>
-                    <h2 className="text-2xl font-semibold">{currentQuestion.title}</h2>
+                    <h2 className="text-2xl font-semibold">
+                      {currentQuestion.title}
+                    </h2>
                     {currentQuestion.description && (
-                      <p className="text-sm text-[#5a6072]">{currentQuestion.description}</p>
+                      <p className="text-sm text-[#5a6072]">
+                        {currentQuestion.description}
+                      </p>
                     )}
                   </div>
                   <div className="mt-6 flex flex-col gap-3">
                     {currentQuestion.options.map((option) => {
-                      const optionKey = `${String(currentQuestion.key)}:${option.value}`;
-                      const isSelected = formData[currentQuestion.key] === option.value;
+                      const optionKey = `${String(currentQuestion.key)}:${
+                        option.value
+                      }`;
+                      const isSelected =
+                        formData[currentQuestion.key] === option.value;
                       const isBlinking = blinkingChoice === optionKey;
                       return (
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() => handleChoiceSelect(currentQuestion, option)}
+                          onClick={() =>
+                            handleChoiceSelect(currentQuestion, option)
+                          }
                           className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8] ${
-                            isSelected ? "border-[#3D38B8] bg-[#f5f6fa] text-[#3D38B8]" : "border-[#d9dce6] bg-white"
+                            isSelected
+                              ? "border-[#3D38B8] bg-[#f5f6fa] text-[#3D38B8]"
+                              : "border-[#d9dce6] bg-white"
                           } ${isBlinking ? "animate-pulse" : ""}`}
                         >
                           <span
@@ -668,12 +687,21 @@ export default function LeadFormPage() {
                             aria-hidden
                           />
                           <span className="flex-1">
-                            <span className="block text-sm font-semibold text-[#10131a]">{option.label}</span>
+                            <span className="block text-sm font-semibold text-[#10131a]">
+                              {option.label}
+                            </span>
                             {option.helper && (
-                              <span className="mt-1 block text-xs text-[#5a6072]">{option.helper}</span>
+                              <span className="mt-1 block text-xs text-[#5a6072]">
+                                {option.helper}
+                              </span>
                             )}
                           </span>
-                          <span aria-hidden className="ml-auto text-base text-[#9197ad]">↗</span>
+                          <span
+                            aria-hidden
+                            className="ml-auto text-base text-[#9197ad]"
+                          >
+                            ↗
+                          </span>
                         </button>
                       );
                     })}
@@ -692,7 +720,9 @@ export default function LeadFormPage() {
                           {currentQuestion.banner.title}
                         </p>
                       </div>
-                      <p className="mt-2">{currentQuestion.banner.description}</p>
+                      <p className="mt-2">
+                        {currentQuestion.banner.description}
+                      </p>
                     </div>
                   )}
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#5a6072]">
@@ -704,7 +734,9 @@ export default function LeadFormPage() {
                     >
                       ← Back
                     </button>
-                    <span>Moves to the next question after your selection.</span>
+                    <span>
+                      Moves to the next question after your selection.
+                    </span>
                   </div>
                 </div>
               )}
@@ -715,14 +747,21 @@ export default function LeadFormPage() {
                     <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
                       {activeStepMeta.title}
                     </span>
-                    <h2 className="text-2xl font-semibold">{currentQuestion.title}</h2>
-                    <p className="text-sm text-[#5a6072]">{currentQuestion.description}</p>
+                    <h2 className="text-2xl font-semibold">
+                      {currentQuestion.title}
+                    </h2>
+                    <p className="text-sm text-[#5a6072]">
+                      {currentQuestion.description}
+                    </p>
                   </div>
                   {currentQuestion.highlights && (
                     <ul className="mt-6 space-y-3 text-sm text-[#5a6072]">
                       {currentQuestion.highlights.map((item) => (
                         <li key={item} className="flex gap-3">
-                          <span aria-hidden className="mt-1 inline-block h-2 w-2 rounded-full bg-[#3D38B8]" />
+                          <span
+                            aria-hidden
+                            className="mt-1 inline-block h-2 w-2 rounded-full bg-[#3D38B8]"
+                          />
                           {item}
                         </li>
                       ))}
@@ -749,14 +788,20 @@ export default function LeadFormPage() {
               )}
 
               {isContactStep && (
-                <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[#d9dce6] bg-white p-8 shadow-sm">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-6 rounded-3xl border border-[#d9dce6] bg-white p-8 shadow-sm"
+                >
                   <div className="space-y-3">
                     <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#514EA1]">
                       {activeStepMeta.title}
                     </span>
-                    <h2 className="text-2xl font-semibold">Where can we send your curated roadmap?</h2>
+                    <h2 className="text-2xl font-semibold">
+                      Where can we send your curated roadmap?
+                    </h2>
                     <p className="text-sm text-[#5a6072]">
-                      We share your shortlist instantly and follow up with a counsellor call in your preferred window.
+                      We share your shortlist instantly and follow up with a
+                      counsellor call in your preferred window.
                     </p>
                   </div>
 
@@ -813,7 +858,9 @@ export default function LeadFormPage() {
                     <FieldControl
                       label="Preferred contact window"
                       value={formData.bestContactWindow}
-                      onChange={(e) => updateField("bestContactWindow", e.target.value)}
+                      onChange={(e) =>
+                        updateField("bestContactWindow", e.target.value)
+                      }
                       placeholder="Morning / Evening / Weekend"
                       className="sm:col-span-2"
                     />
@@ -826,13 +873,17 @@ export default function LeadFormPage() {
                     <FieldControl
                       label="UTM campaign"
                       value={formData.utmCampaign}
-                      onChange={(e) => updateField("utmCampaign", e.target.value)}
+                      onChange={(e) =>
+                        updateField("utmCampaign", e.target.value)
+                      }
                       placeholder="Optional tracking"
                     />
                   </div>
 
                   <div className="rounded-2xl border border-[#d9dce6] bg-[#f5f6fa] p-5 text-sm text-[#5a6072]">
-                    <p className="font-semibold uppercase tracking-[0.18em] text-[#3D38B8]">What happens next</p>
+                    <p className="font-semibold uppercase tracking-[0.18em] text-[#3D38B8]">
+                      What happens next
+                    </p>
                     <ul className="mt-3 space-y-2">
                       <li>• Personalised shortlist mailed within 2 minutes</li>
                       <li>• Counsellor follow-up in your preferred window</li>
@@ -878,7 +929,9 @@ function FieldControl({
 }) {
   return (
     <div className={className}>
-      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[#514EA1]">{label}</label>
+      <label className="text-xs font-semibold uppercase tracking-[0.28em] text-[#514EA1]">
+        {label}
+      </label>
       <input
         type={type}
         value={value}
@@ -893,5 +946,7 @@ function FieldControl({
 }
 
 function formatINR(n: number) {
-  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n || 0);
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(
+    n || 0
+  );
 }

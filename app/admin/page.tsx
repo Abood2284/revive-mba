@@ -80,7 +80,7 @@ export default async function AdminDashboard() {
       href: "/admin/leads",
       label: "Leads",
       metric: leadCount,
-      helper: "Prospects captured via Revive MBA",
+      helper: "Prospects captured via Revive Education",
       icon: Users,
     },
   ];
@@ -117,7 +117,7 @@ export default async function AdminDashboard() {
     <>
       <AdminPageHeader
         title="Dashboard"
-        description="Track key platform metrics and jump into the workflows that keep Revive MBA moving."
+        description="Track key platform metrics and jump into the workflows that keep Revive Education moving."
         stats={[
           {
             label: "Programs",
@@ -145,34 +145,36 @@ export default async function AdminDashboard() {
                 Manage catalog
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
-                {overviewCards.map(({ href, label, metric, helper, icon: Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="group relative overflow-hidden rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_15%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_92%,white_8%)] p-6 shadow-[0_28px_72px_-48px_rgba(16,19,26,0.52)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_-44px_rgba(16,19,26,0.55)]"
-                  >
-                    <div className="absolute inset-0 opacity-0 transition group-hover:opacity-100">
-                      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--color-accent)_28%,transparent)_0%,transparent_72%)]" />
-                    </div>
-                    <div className="relative flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:color-mix(in_srgb,var(--color-accent)_16%,transparent)] text-[color:var(--color-accent)]">
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in_srgb,var(--color-secondary)_58%,white_42%)]">
-                          {label}
-                        </span>
+                {overviewCards.map(
+                  ({ href, label, metric, helper, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="group relative overflow-hidden rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_15%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_92%,white_8%)] p-6 shadow-[0_28px_72px_-48px_rgba(16,19,26,0.52)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_-44px_rgba(16,19,26,0.55)]"
+                    >
+                      <div className="absolute inset-0 opacity-0 transition group-hover:opacity-100">
+                        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--color-accent)_28%,transparent)_0%,transparent_72%)]" />
                       </div>
-                      <ArrowUpRight className="h-4 w-4 text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)] transition group-hover:text-[color:var(--color-accent)]" />
-                    </div>
-                    <div className="relative mt-6 text-4xl font-bold text-[color:var(--color-secondary)]">
-                      {metric}
-                    </div>
-                    <p className="relative mt-3 text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
-                      {helper}
-                    </p>
-                  </Link>
-                ))}
+                      <div className="relative flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:color-mix(in_srgb,var(--color-accent)_16%,transparent)] text-[color:var(--color-accent)]">
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:color-mix(in_srgb,var(--color-secondary)_58%,white_42%)]">
+                            {label}
+                          </span>
+                        </div>
+                        <ArrowUpRight className="h-4 w-4 text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)] transition group-hover:text-[color:var(--color-accent)]" />
+                      </div>
+                      <div className="relative mt-6 text-4xl font-bold text-[color:var(--color-secondary)]">
+                        {metric}
+                      </div>
+                      <p className="relative mt-3 text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
+                        {helper}
+                      </p>
+                    </Link>
+                  )
+                )}
               </div>
             </div>
 
@@ -181,39 +183,41 @@ export default async function AdminDashboard() {
                 Quick actions
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
-                {quickActions.map(({ href, label, description, icon: Icon, external }) => {
-                  const linkProps = external
-                    ? ({ target: "_blank", rel: "noreferrer" } as const)
-                    : {};
-                  return (
-                    <Link
-                      key={label}
-                      href={href}
-                      className="group relative overflow-hidden rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_94%,white_6%)] p-5 shadow-[0_24px_60px_-48px_rgba(16,19,26,0.48)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_72px_-44px_rgba(16,19,26,0.52)]"
-                      {...linkProps}
-                    >
-                      <div className="absolute inset-0 opacity-0 transition group-hover:opacity-100">
-                        <div className="absolute -bottom-10 right-0 h-24 w-24 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--color-tertiary)_22%,transparent)_0%,transparent_75%)] opacity-80" />
-                      </div>
-                      <div className="relative flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] text-[color:var(--color-secondary)]">
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-[color:var(--color-secondary)]">
-                              {label}
-                            </p>
-                            <p className="mt-1 text-xs text-[color:color-mix(in_srgb,var(--color-secondary)_62%,white_38%)]">
-                              {description}
-                            </p>
-                          </div>
+                {quickActions.map(
+                  ({ href, label, description, icon: Icon, external }) => {
+                    const linkProps = external
+                      ? ({ target: "_blank", rel: "noreferrer" } as const)
+                      : {};
+                    return (
+                      <Link
+                        key={label}
+                        href={href}
+                        className="group relative overflow-hidden rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_94%,white_6%)] p-5 shadow-[0_24px_60px_-48px_rgba(16,19,26,0.48)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_72px_-44px_rgba(16,19,26,0.52)]"
+                        {...linkProps}
+                      >
+                        <div className="absolute inset-0 opacity-0 transition group-hover:opacity-100">
+                          <div className="absolute -bottom-10 right-0 h-24 w-24 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--color-tertiary)_22%,transparent)_0%,transparent_75%)] opacity-80" />
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)] transition group-hover:translate-x-1 group-hover:text-[color:var(--color-accent)]" />
-                      </div>
-                    </Link>
-                  );
-                })}
+                        <div className="relative flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] text-[color:var(--color-secondary)]">
+                              <Icon className="h-5 w-5" />
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold text-[color:var(--color-secondary)]">
+                                {label}
+                              </p>
+                              <p className="mt-1 text-xs text-[color:color-mix(in_srgb,var(--color-secondary)_62%,white_38%)]">
+                                {description}
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowUpRight className="h-4 w-4 text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)] transition group-hover:translate-x-1 group-hover:text-[color:var(--color-accent)]" />
+                        </div>
+                      </Link>
+                    );
+                  }
+                )}
               </div>
             </div>
           </div>

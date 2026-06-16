@@ -82,17 +82,17 @@ export function SiteFooter() {
               priority
             />
             <span className="text-base font-semibold text-white">
-              Revive MBA
+              Revive Education
             </span>
           </Link>
         </div>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
           <div>
             <p className="text-sm uppercase tracking-[0.28em] text-[#8E8AF0]">
-              Revive MBA Platform
+              Revive Education Platform
             </p>
             <h3 className="mt-3 text-2xl font-semibold text-white md:text-3xl">
-              Honest guidance to help you choose the right MBA path
+              Honest guidance to help you choose the right program path
             </h3>
             <p className="mt-4 max-w-md text-sm text-[#CBCBF8]">
               We combine counsellors, curated data, and tools to make admissions
@@ -212,7 +212,7 @@ export function SiteFooter() {
 
         <div className="mt-12 border-t border-white/10 pt-6">
           <div className="flex flex-wrap items-center justify-between gap-6 text-xs text-[#BEBDF7]">
-            <p>© {currentYear} Revive MBA. All rights reserved.</p>
+            <p>© {currentYear} Revive Education. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
               {policyLinks.map((item) => (
                 <Link

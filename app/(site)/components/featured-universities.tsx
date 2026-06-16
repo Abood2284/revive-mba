@@ -121,9 +121,8 @@ export function FeaturedUniversitiesSection({
 
         <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
           {universities.map((uni) => (
-            <a
+            <div
               key={uni.id}
-              href={uni.href ?? "#"}
               className="group relative flex flex-col items-center justify-between rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)] bg-white p-4 text-center shadow-sm transition hover:border-[color:color-mix(in_srgb,var(--color-secondary)_22%,transparent)] hover:shadow-md"
             >
               {typeof uni.programs?.length === "number" &&
@@ -136,7 +135,7 @@ export function FeaturedUniversitiesSection({
               <p className="mt-0.5 line-clamp-2 text-[12px] font-medium text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]">
                 {uni.name}
               </p>
-            </a>
+            </div>
           ))}
         </div>
 

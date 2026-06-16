@@ -151,19 +151,21 @@ export function CompareTable({ programs }: CompareTableProps) {
     values,
     className = "",
     isAlternate = false,
+    isSmall = false,
   }: {
     label: string;
     values: React.ReactNode[];
     className?: string;
     isAlternate?: boolean;
+    isSmall?: boolean;
   }) => (
     <tr
       className={`border-b border-[#d9dce6] ${
         isAlternate ? "bg-[#f8f9fa]" : "bg-white"
-      } text-[10px] leading-tight md:text-sm ${className}`}
+      } ${isSmall ? "text-[9px] leading-tight md:text-xs" : "text-[10px] leading-tight md:text-sm"} ${className}`}
     >
       <td
-        className={`sticky left-0 z-10 px-2 py-2 font-semibold text-[#10131a] min-w-[120px] w-[32%] md:min-w-[180px] md:w-auto ${
+        className={`sticky left-0 z-10 px-2 ${isSmall ? "py-1.5" : "py-2"} font-semibold text-[#10131a] min-w-[120px] w-[32%] md:min-w-[180px] md:w-auto ${
           isAlternate ? "bg-[#f8f9fa]" : "bg-white"
         }`}
       >
@@ -172,7 +174,7 @@ export function CompareTable({ programs }: CompareTableProps) {
       {values.map((value, index) => (
         <td
           key={index}
-          className={`px-2 py-2 text-[#5a6072] min-w-[160px] md:min-w-[220px] ${
+          className={`px-2 ${isSmall ? "py-1.5" : "py-2"} text-[#5a6072] min-w-[160px] md:min-w-[220px] ${
             isAlternate ? "bg-[#f8f9fa]" : "bg-white"
           }`}
         >
@@ -181,7 +183,7 @@ export function CompareTable({ programs }: CompareTableProps) {
       ))}
       {programs.length < 4 && (
         <td
-          className={`px-2 py-2 text-center min-w-[160px] md:min-w-[220px] ${
+          className={`px-2 ${isSmall ? "py-1.5" : "py-2"} text-center min-w-[160px] md:min-w-[220px] ${
             isAlternate ? "bg-[#f8f9fa]" : "bg-white"
           }`}
         >
@@ -210,21 +212,56 @@ export function CompareTable({ programs }: CompareTableProps) {
         </svg>
       </button>
 
-      <div className="surface-card p-3 md:p-4">
-        <div className="mb-2 md:mb-3 flex items-center gap-2">
-          {program.isFeatured && (
-            <span className="metric-chip text-[10px] md:text-xs">Featured</span>
-          )}
-          <span className="eyebrow text-[10px] md:text-xs">
-            {program.degreeType}
-          </span>
-        </div>
+      <div className="surface-card overflow-hidden relative">
+        {/* Hero Image with text overlay */}
+        {program.heroImage ? (
+          <div className="relative h-48 md:h-56 w-full overflow-hidden">
+            <img
+              src={program.heroImage}
+              alt={program.title}
+              className="h-full w-full object-cover"
+            />
+            {/* Gradient overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/30 to-black/85" />
+            
+            {/* Content overlay - positioned at bottom */}
+            <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-3 md:p-4 pb-3 md:pb-4">
+              {/* Badges */}
+              {program.isFeatured && (
+                <div className="mb-2 flex items-center gap-2 flex-wrap">
+                  <span className="rounded-full border border-white/40 bg-white/20 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
+                    Featured
+                  </span>
+                </div>
+              )}
+              
+              {/* Title */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs md:text-base font-semibold text-white leading-tight line-clamp-2 drop-shadow-lg">
+                  {program.title}
+                </h3>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 md:p-4">
+            {/* Badges if no hero image */}
+            <div className="mb-2 flex items-center gap-2 flex-wrap">
+              {program.isFeatured && (
+                <span className="metric-chip text-[10px] md:text-xs">Featured</span>
+              )}
+              {program.degreeType && (
+                <span className="eyebrow text-[10px] md:text-xs">
+                  {program.degreeType}
+                </span>
+              )}
+            </div>
 
-        <h3 className="text-xs md:text-lg font-semibold text-[#10131a] mb-1 md:mb-2 line-clamp-2">
-          {program.title}
-        </h3>
-
-        {/* Removed duplicate info - already shown in comparison rows below */}
+            <h3 className="text-xs md:text-lg font-semibold text-[#10131a] mb-1 md:mb-2 line-clamp-2">
+              {program.title}
+            </h3>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -237,19 +274,19 @@ export function CompareTable({ programs }: CompareTableProps) {
           <table className="w-full border-collapse table-fixed">
             <thead>
               <tr className="border-b-2 border-[#d9dce6] text-xs md:text-sm">
-                <th className="sticky left-0 z-10 bg-[#f5f6fa] px-2 py-3 text-left font-semibold text-[#10131a] min-w-[120px] w-[32%] md:min-w-[180px] md:w-auto">
+                <th className="sticky left-0 z-10 bg-[#f5f6fa] px-2 py-3 text-left font-bold uppercase tracking-wider text-[#10131a] min-w-[120px] w-[32%] md:min-w-[180px] md:w-auto">
                   Features
                 </th>
                 {programs.map((program) => (
                   <th
                     key={program.id}
-                    className="px-2 py-3 text-center min-w-[160px] md:min-w-[220px]"
+                    className="px-2 py-3 text-left min-w-[160px] md:min-w-[220px]"
                   >
                     <ProgramHeader program={program} />
                   </th>
                 ))}
                 {programs.length < 4 && (
-                  <th className="px-2 py-3 text-center min-w-[160px] md:min-w-[220px]">
+                  <th className="px-2 py-3 text-left min-w-[160px] md:min-w-[220px]">
                     <button
                       onClick={() => setShowAddDialog(true)}
                       className="w-full surface-card p-4 hover:border-[#3D38B8] hover:shadow-md transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8]"
@@ -285,11 +322,29 @@ export function CompareTable({ programs }: CompareTableProps) {
               <tr className="bg-[#f8f9fa]">
                 <td
                   colSpan={programs.length + (programs.length < 4 ? 2 : 1)}
-                  className="px-4 py-3 text-sm font-bold text-[#10131a]"
+                  className="px-4 py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-[#10131a]"
                 >
                   Overview
                 </td>
               </tr>
+
+              <ComparisonRow
+                label="Logo"
+                values={programs.map((program) => (
+                  <div className="flex items-center justify-center md:justify-start">
+                    {program.institution?.logoUrl ? (
+                      <img
+                        src={program.institution.logoUrl}
+                        alt={program.institution.name || "Institution logo"}
+                        className="h-12 w-12 md:h-16 md:w-16 object-contain"
+                      />
+                    ) : (
+                      <span className="text-xs text-[#9197ad]">No logo</span>
+                    )}
+                  </div>
+                ))}
+                isAlternate={true}
+              />
 
               <ComparisonRow
                 label="University"
@@ -305,33 +360,34 @@ export function CompareTable({ programs }: CompareTableProps) {
                     )}
                   </div>
                 ))}
-                isAlternate={true}
               />
 
               <ComparisonRow
                 label="Accreditation"
                 values={programs.map((program) => (
-                  <span className="text-sm">
+                  <span className="text-xs text-[#9197ad]">
                     {program.institution?.accreditation || "Not specified"}
                   </span>
                 ))}
+                isSmall={true}
               />
 
               <ComparisonRow
                 label="Established"
                 values={programs.map((program) => (
-                  <span className="text-sm">
+                  <span className="text-xs text-[#9197ad]">
                     {program.institution?.establishedYear || "Not specified"}
                   </span>
                 ))}
                 isAlternate={true}
+                isSmall={true}
               />
 
               {/* Program Details Section */}
               <tr className="bg-[#f8f9fa]">
                 <td
                   colSpan={programs.length + (programs.length < 4 ? 2 : 1)}
-                  className="px-4 py-3 text-sm font-bold text-[#10131a]"
+                  className="px-4 py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-[#10131a]"
                 >
                   Program Details
                 </td>
@@ -385,7 +441,7 @@ export function CompareTable({ programs }: CompareTableProps) {
               <tr className="bg-[#f8f9fa]">
                 <td
                   colSpan={programs.length + (programs.length < 4 ? 2 : 1)}
-                  className="px-4 py-3 text-sm font-bold text-[#10131a]"
+                  className="px-4 py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-[#10131a]"
                 >
                   Fees
                 </td>
@@ -428,7 +484,7 @@ export function CompareTable({ programs }: CompareTableProps) {
               <tr className="bg-[#f8f9fa]">
                 <td
                   colSpan={programs.length + (programs.length < 4 ? 2 : 1)}
-                  className="px-4 py-3 text-sm font-bold text-[#10131a]"
+                  className="px-4 py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-[#10131a]"
                 >
                   Requirements
                 </td>
@@ -471,7 +527,7 @@ export function CompareTable({ programs }: CompareTableProps) {
               <tr className="bg-[#f8f9fa]">
                 <td
                   colSpan={programs.length + (programs.length < 4 ? 2 : 1)}
-                  className="px-4 py-3 text-sm font-bold text-[#10131a]"
+                  className="px-4 py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-[#10131a]"
                 >
                   Additional Information
                 </td>
@@ -480,9 +536,10 @@ export function CompareTable({ programs }: CompareTableProps) {
               <ComparisonRow
                 label="Application Deadline"
                 values={programs.map((program) => (
-                  <span>{formatDate(program.applicationDeadline)}</span>
+                  <span className="text-xs text-[#9197ad]">{formatDate(program.applicationDeadline)}</span>
                 ))}
                 isAlternate={true}
+                isSmall={true}
               />
 
               <ComparisonRow

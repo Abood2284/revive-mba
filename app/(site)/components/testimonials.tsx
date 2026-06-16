@@ -61,6 +61,7 @@ export function TestimonialsSection({
 }) {
   return (
     <section
+      id="testimonials"
       className="w-full bg-white"
       style={
         {

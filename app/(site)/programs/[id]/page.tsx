@@ -6,7 +6,7 @@ import {
   programFees,
   programFaqs,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -61,7 +61,11 @@ async function getProgram(id: number) {
       .select()
       .from(programSpecialisations)
       .where(eq(programSpecialisations.programId, id)),
-    db.select().from(programFees).where(eq(programFees.programId, id)),
+    db
+      .select()
+      .from(programFees)
+      .where(eq(programFees.programId, id))
+      .orderBy(asc(programFees.id)),
     db.select().from(programFaqs).where(eq(programFaqs.programId, id)),
   ]);
 
@@ -107,33 +111,324 @@ function formatDate(date: Date | null) {
   }).format(new Date(date));
 }
 
-function parseCurriculum(content: string) {
-  const matches = [...content.matchAll(/(SEM\s*\d+\s*:)/gi)];
-  if (matches.length === 0) return [];
+function parseCurriculum({
+  content,
+}: {
+  content: string;
+}): ParseCurriculumResult {
+  const matches = [
+    ...content.matchAll(/(SEM(?:ESTER)?\s*\d+)\s*(?:[:\-•]|$)/gi),
+  ];
 
-  return matches
-    .map((match, index) => {
-      const label = match[1];
-      const startIndex = (match.index ?? 0) + label.length;
-      const endIndex =
-        index + 1 < matches.length
-          ? matches[index + 1].index ?? content.length
-          : content.length;
-      const body = content.slice(startIndex, endIndex).trim();
-      const cleaned = body.replace(/^[;,\-\s]+/, "");
-      const subjects = cleaned
-        .split(/;|\n|•/g)
-        .map((item) => item.trim())
-        .filter(Boolean);
+  if (matches.length > 0) {
+    const semesters = matches
+      .map((match, index) => {
+        const label = match[1];
+        const startIndex = (match.index ?? 0) + match[0].length;
+        const endIndex =
+          index + 1 < matches.length
+            ? matches[index + 1].index ?? content.length
+            : content.length;
+        const body = content.slice(startIndex, endIndex).trim();
+        const cleaned = body.replace(/^[;,\-\s•:]+/, "");
+        const subjects = cleaned
+          .split(/;|\n|•/g)
+          .map((item) => item.trim())
+          .filter(Boolean);
 
-      if (subjects.length === 0) return null;
+        if (subjects.length === 0) return null;
 
+        return {
+          title: label.replace(":", "").trim().replace(/\s+/g, " "),
+          subjects,
+        };
+      })
+      .filter(Boolean) as Array<{ title: string; subjects: string[] }>;
+
+    if (semesters.length > 0) {
+      return { semesters, modules: null, rawHtml: null };
+    }
+  }
+
+  const firstBulletIndex = content.indexOf("•");
+  if (firstBulletIndex !== -1) {
+    const prefix = content.slice(0, firstBulletIndex).trim();
+    const colonIndex = prefix.lastIndexOf(":");
+    const titleCandidate =
+      colonIndex !== -1
+        ? prefix.slice(0, colonIndex).trim()
+        : prefix.length > 0
+        ? prefix
+        : null;
+
+    const items = content
+      .slice(firstBulletIndex)
+      .split("•")
+      .map((item) => item.replace(/^[\s:;\-\u2022]+/, "").trim())
+      .filter(Boolean);
+
+    if (items.length > 0) {
       return {
-        title: label.replace(":", "").trim().replace(/\s+/g, " "),
-        subjects,
+        semesters: [],
+        modules: {
+          title: titleCandidate,
+          items,
+        },
+        rawHtml: null,
       };
-    })
-    .filter(Boolean) as Array<{ title: string; subjects: string[] }>;
+    }
+  }
+
+  return { semesters: [], modules: null, rawHtml: content };
+}
+
+function parseHighlights({
+  content,
+}: {
+  content: string;
+}): ParseHighlightsResult {
+  if (!content || content.trim().length === 0) {
+    return { entries: [], rawHtml: null };
+  }
+
+  const withNormalizedBreaks = content
+    .replace(/\r\n|\r/g, "\n")
+    .replace(/[\u2022•·]/g, "\n")
+    .replace(/\s[-–—]\s/g, "\n")
+    .replace(/(\.)(\s+)/g, "$1\n");
+
+  const segments = withNormalizedBreaks
+    .split("\n")
+    .flatMap((segment) => segment.split(";"))
+    .map((segment) => segment.trim())
+    .map((segment) => segment.replace(/^[\-–—•\u2022]+/, "").trim())
+    .filter(Boolean);
+
+  const entries: HighlightEntry[] = [];
+
+  segments.forEach((segment, index) => {
+    const cleaned = segment
+      .replace(/\s+/g, " ")
+      .replace(/[.,;]+$/, "")
+      .trim();
+    if (!cleaned) return;
+
+    const colonIndex = cleaned.indexOf(":");
+    if (colonIndex > 0 && colonIndex < cleaned.length - 1) {
+      const label = cleaned.slice(0, colonIndex).trim();
+      const value = cleaned.slice(colonIndex + 1).trim();
+      if (value.length === 0) {
+        entries.push({
+          id: buildHighlightId({ value: label, fallback: index }),
+          value: label,
+        });
+        return;
+      }
+      entries.push({
+        id: buildHighlightId({ label, value, fallback: index }),
+        label,
+        value,
+      });
+      return;
+    }
+
+    entries.push({
+      id: buildHighlightId({ value: cleaned, fallback: index }),
+      value: cleaned,
+    });
+  });
+
+  if (entries.length === 0) {
+    return { entries: [], rawHtml: content };
+  }
+
+  return { entries, rawHtml: null };
+}
+
+function buildHighlightId({
+  label,
+  value,
+  fallback,
+}: {
+  label?: string;
+  value: string;
+  fallback: number;
+}) {
+  const source = label ? `${label}-${value}` : value;
+  const normalized = source
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (normalized.length > 0) return `highlight-${normalized}`;
+  return `highlight-${fallback}`;
+}
+
+function parseEligibility({
+  content,
+}: {
+  content: string;
+}): ParseHighlightsResult {
+  return parseHighlights({ content });
+}
+
+function getFeeBreakdown({
+  fees,
+}: {
+  fees: ProgramFeeRow[];
+}): FeeBreakdownResult {
+  if (!Array.isArray(fees) || fees.length === 0) {
+    return { groups: [], others: [], totals: [] };
+  }
+
+  const groupsByYear = new Map<number, FeeGroupAccumulator>();
+  const totals: FeeEntry[] = [];
+  const others: FeeEntry[] = [];
+
+  fees.forEach((fee) => {
+    const label = typeof fee.label === "string" ? fee.label.trim() : "";
+    if (!label) return;
+
+    if (isTotalLabel({ label })) {
+      totals.push({ id: fee.id, label, amount: fee.amount });
+      return;
+    }
+
+    const yearNumber = extractYear({ label });
+    const semesterNumber = extractSemester({ label });
+
+    if (yearNumber !== undefined && semesterNumber === undefined) {
+      const group =
+        groupsByYear.get(yearNumber) ?? createYearGroup({ year: yearNumber });
+      group.title = label;
+      group.amount = fee.amount;
+      group.hasCustomTitle = true;
+      groupsByYear.set(yearNumber, group);
+      return;
+    }
+
+    if (semesterNumber !== undefined) {
+      const inferredYear =
+        yearNumber !== undefined
+          ? yearNumber
+          : Math.max(1, Math.ceil(semesterNumber / 2));
+      const group =
+        groupsByYear.get(inferredYear) ??
+        createYearGroup({ year: inferredYear });
+      group.semesters.push({
+        id: fee.id,
+        label,
+        amount: fee.amount,
+        order: semesterNumber,
+      });
+      groupsByYear.set(inferredYear, group);
+      return;
+    }
+
+    others.push({ id: fee.id, label, amount: fee.amount });
+  });
+
+  const groups = Array.from(groupsByYear.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([, group]) => ({
+      key: group.key,
+      title: group.title,
+      amount: group.amount,
+      semesters: group.semesters
+        .sort((a, b) => a.order - b.order)
+        .map(({ order, ...rest }) => rest),
+    }))
+    .filter(
+      (group) => group.amount !== undefined || group.semesters.length > 0
+    );
+
+  others.sort((a, b) => a.label.localeCompare(b.label));
+  totals.sort((a, b) => a.label.localeCompare(b.label));
+
+  return { groups, others, totals };
+}
+
+function isTotalLabel({ label }: { label: string }) {
+  const normalized = label.toLowerCase();
+  return normalized.includes("total");
+}
+
+function extractYear({ label }: { label: string }) {
+  const match = label.match(/year\s+([ivx]+|\d+)/i);
+  if (!match) return undefined;
+  const token = match[1];
+  if (/^\d+$/.test(token)) {
+    const numeric = parseInt(token, 10);
+    return Number.isFinite(numeric) ? numeric : undefined;
+  }
+  return romanToNumber({ roman: token });
+}
+
+function extractSemester({ label }: { label: string }) {
+  const ordinalMatch = label.match(/(\d+)(?:st|nd|rd|th)\s+semester/i);
+  if (ordinalMatch) {
+    const numeric = parseInt(ordinalMatch[1], 10);
+    return Number.isFinite(numeric) ? numeric : undefined;
+  }
+
+  const shorthandMatch = label.match(/sem(?:ester)?\s*(\d+)/i);
+  if (shorthandMatch) {
+    const numeric = parseInt(shorthandMatch[1], 10);
+    return Number.isFinite(numeric) ? numeric : undefined;
+  }
+
+  return undefined;
+}
+
+function createYearGroup({ year }: { year: number }): FeeGroupAccumulator {
+  return {
+    key: `year-${year}`,
+    title: buildDefaultYearTitle({ year }),
+    amount: undefined,
+    semesters: [],
+    hasCustomTitle: false,
+  };
+}
+
+function buildDefaultYearTitle({ year }: { year: number }) {
+  const start = Math.max(1, year * 2 - 1);
+  const end = Math.max(start, year * 2);
+  return `Year ${toRoman({ value: year })} (Sem ${start}–${end})`;
+}
+
+function toRoman({ value }: { value: number }) {
+  if (!Number.isFinite(value) || value <= 0) return String(value);
+  const numerals = [
+    "",
+    "I",
+    "II",
+    "III",
+    "IV",
+    "V",
+    "VI",
+    "VII",
+    "VIII",
+    "IX",
+    "X",
+  ];
+  if (value < numerals.length) return numerals[value];
+  return String(value);
+}
+
+function romanToNumber({ roman }: { roman: string }) {
+  const lookup: Record<string, number> = {
+    i: 1,
+    ii: 2,
+    iii: 3,
+    iv: 4,
+    v: 5,
+    vi: 6,
+    vii: 7,
+    viii: 8,
+    ix: 9,
+    x: 10,
+  };
+  const normalized = roman.toLowerCase();
+  return lookup[normalized];
 }
 
 export default async function ProgramDetailPage({
@@ -175,9 +470,28 @@ export default async function ProgramDetailPage({
       : null,
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
-  const curriculumSemesters = program.curriculum
-    ? parseCurriculum(program.curriculum)
-    : [];
+  const curriculumContent = program.curriculum
+    ? parseCurriculum({ content: program.curriculum })
+    : { semesters: [], modules: null, rawHtml: null };
+  const feeBreakdown = getFeeBreakdown({ fees: program.fees });
+  const highlightContent = program.highlights
+    ? parseHighlights({ content: program.highlights })
+    : { entries: [], rawHtml: null };
+  const highlightPairs = highlightContent.entries.filter(
+    (entry) => entry.label
+  );
+  const highlightBullets = highlightContent.entries.filter(
+    (entry) => !entry.label
+  );
+  const eligibilityContent = program.eligibility
+    ? parseEligibility({ content: program.eligibility })
+    : { entries: [], rawHtml: null };
+  const eligibilityPairs = eligibilityContent.entries.filter(
+    (entry) => entry.label
+  );
+  const eligibilityBullets = eligibilityContent.entries.filter(
+    (entry) => !entry.label
+  );
 
   return (
     <div className="min-h-screen bg-[var(--surface-base)]">
@@ -356,7 +670,7 @@ export default async function ProgramDetailPage({
                 <div className="space-y-6">
                   <span className="eyebrow">Specialisations</span>
                   <h2 className="text-3xl font-semibold text-[color:var(--color-secondary)]">
-                    Tailor the MBA to match your ambitions
+                    Tailored to your ambitions
                   </h2>
                   <ul className="grid gap-4 sm:grid-cols-2">
                     {program.specialisations.map((spec) => (
@@ -381,9 +695,45 @@ export default async function ProgramDetailPage({
               {program.highlights && (
                 <RichContentBlock
                   eyebrow="Program highlights"
-                  title="What makes this MBA stand out"
-                  html={program.highlights}
-                />
+                  title="What makes this program stand out"
+                  html={highlightContent.rawHtml ?? undefined}
+                >
+                  {(highlightPairs.length > 0 ||
+                    highlightBullets.length > 0) && (
+                    <div className="space-y-4">
+                      {highlightPairs.length > 0 && (
+                        <dl className="grid gap-3 sm:grid-cols-2">
+                          {highlightPairs.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className="rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_96%,white_4%)] p-4"
+                            >
+                              <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
+                                {entry.label}
+                              </dt>
+                              <dd className="mt-2 text-sm font-semibold text-[color:var(--color-secondary)]">
+                                {entry.value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      )}
+                      {highlightBullets.length > 0 && (
+                        <ul className="grid gap-2">
+                          {highlightBullets.map((entry) => (
+                            <li
+                              key={entry.id}
+                              className="flex items-start gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)] bg-white px-4 py-3 text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]"
+                            >
+                              <span className="mt-1 block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[color:var(--color-accent)]" />
+                              <span>{entry.value}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </RichContentBlock>
               )}
 
               {program.curriculum && (
@@ -391,34 +741,47 @@ export default async function ProgramDetailPage({
                   eyebrow="Curriculum"
                   title="Learning journey and curriculum snapshot"
                   html={
-                    curriculumSemesters.length === 0
-                      ? program.curriculum
+                    curriculumContent.semesters.length === 0
+                      ? curriculumContent.rawHtml ?? program.curriculum
                       : undefined
                   }
                 >
-                  {curriculumSemesters.length > 0 && (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {curriculumSemesters.map((semester, index) => (
-                        <div
-                          key={`${semester.title}-${index}`}
-                          className="rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_94%,white_6%)] p-5"
-                        >
-                          <p className="text-xs uppercase tracking-[0.3em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)]">
-                            {semester.title}
-                          </p>
-                          <ul className="mt-3 space-y-2 text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]">
-                            {semester.subjects.map((subject, index) => (
-                              <li
+                  {curriculumContent.semesters.length > 0 && (
+                    <div className="overflow-hidden rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_94%,white_6%)]">
+                      <table className="w-full border-collapse text-left">
+                        <tbody>
+                          {curriculumContent.semesters.map(
+                            (semester, index) => (
+                              <tr
                                 key={`${semester.title}-${index}`}
-                                className="relative pl-4"
+                                className="border-b border-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)] last:border-none"
                               >
-                                <span className="absolute left-0 top-2 block h-1 w-1 rounded-full bg-[color:var(--color-accent)]" />
-                                {subject}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
+                                <th
+                                  scope="row"
+                                  className="align-top bg-[color:color-mix(in_srgb,var(--surface-subtle)_90%,white_10%)] px-4 py-4 text-xs uppercase tracking-[0.3em] text-[color:color-mix(in_srgb,var(--color-secondary)_60%,white_40%)] sm:w-40 md:w-48"
+                                >
+                                  {semester.title}
+                                </th>
+                                <td className="px-4 py-4">
+                                  <ul className="space-y-2 text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]">
+                                    {semester.subjects.map(
+                                      (subject, subjectIndex) => (
+                                        <li
+                                          key={`${semester.title}-${subjectIndex}`}
+                                          className="flex items-start gap-2"
+                                        >
+                                          <span className="mt-2 block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[color:var(--color-accent)]" />
+                                          <span>{subject}</span>
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                </td>
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </RichContentBlock>
@@ -436,8 +799,48 @@ export default async function ProgramDetailPage({
                 <RichContentBlock
                   eyebrow="Eligibility"
                   title="Who should apply"
-                  html={program.eligibility}
+                  html={
+                    eligibilityContent.entries.length === 0
+                      ? eligibilityContent.rawHtml ?? program.eligibility
+                      : undefined
+                  }
                 >
+                  {(eligibilityPairs.length > 0 ||
+                    eligibilityBullets.length > 0) && (
+                    <div className="space-y-4">
+                      {eligibilityPairs.length > 0 && (
+                        <dl className="grid gap-3 sm:grid-cols-2">
+                          {eligibilityPairs.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className="rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_96%,white_4%)] p-4"
+                            >
+                              <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
+                                {entry.label}
+                              </dt>
+                              <dd className="mt-2 text-sm font-semibold text-[color:var(--color-secondary)]">
+                                {entry.value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      )}
+                      {eligibilityBullets.length > 0 && (
+                        <ul className="grid gap-2">
+                          {eligibilityBullets.map((entry) => (
+                            <li
+                              key={entry.id}
+                              className="flex items-start gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)] bg-white px-4 py-3 text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]"
+                            >
+                              <span className="mt-1 block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[color:var(--color-accent)]" />
+                              <span>{entry.value}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
                   {program.workExperienceMinYears !== null && (
                     <p className="mt-4 rounded-xl border border-dashed border-[color:color-mix(in_srgb,var(--color-secondary)_20%,transparent)] bg-[color:color-mix(in_srgb,var(--color-accent)_10%,white_90%)] px-4 py-3 text-sm font-semibold text-[color:var(--color-secondary)]">
                       Minimum work experience: {program.workExperienceMinYears}{" "}
@@ -478,26 +881,87 @@ export default async function ProgramDetailPage({
 
             {/* Sidebar */}
             <aside className="space-y-6 lg:sticky lg:top-28">
-              {program.fees.length > 0 && (
+              {(feeBreakdown.groups.length > 0 ||
+                feeBreakdown.others.length > 0 ||
+                feeBreakdown.totals.length > 0) && (
                 <div className="surface-card p-6">
                   <h3 className="text-lg font-semibold text-[color:var(--color-secondary)]">
                     Investment breakdown
                   </h3>
-                  <dl className="mt-4 divide-y divide-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)]">
-                    {program.fees.map((fee) => (
+                  <div className="mt-4 space-y-4">
+                    {feeBreakdown.groups.map((group) => (
                       <div
-                        key={fee.id}
-                        className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                        key={group.key}
+                        className="rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-[color:color-mix(in_srgb,var(--surface-subtle)_94%,white_6%)] p-4"
                       >
-                        <dt className="text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
-                          {fee.label}
-                        </dt>
-                        <dd className="text-sm font-semibold text-[color:var(--color-secondary)]">
-                          {formatCurrency(fee.amount)}
-                        </dd>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-[color:var(--color-secondary)]">
+                            {group.title}
+                          </span>
+                          {typeof group.amount === "number" && (
+                            <span className="text-sm font-semibold text-[color:var(--color-secondary)]">
+                              {formatCurrency(group.amount)}
+                            </span>
+                          )}
+                        </div>
+                        {group.semesters.length > 0 && (
+                          <dl className="mt-3 divide-y divide-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)]">
+                            {group.semesters.map((semester) => (
+                              <div
+                                key={semester.id}
+                                className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                              >
+                                <dt className="text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
+                                  {semester.label}
+                                </dt>
+                                <dd className="text-sm font-semibold text-[color:var(--color-secondary)]">
+                                  {formatCurrency(semester.amount)}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
                       </div>
                     ))}
-                  </dl>
+
+                    {feeBreakdown.others.length > 0 && (
+                      <dl className="divide-y divide-[color:color-mix(in_srgb,var(--color-secondary)_10%,transparent)] rounded-2xl border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-white">
+                        {feeBreakdown.others.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center justify-between gap-3 px-4 py-3 first:rounded-t-2xl last:rounded-b-2xl"
+                          >
+                            <dt className="text-sm text-[color:color-mix(in_srgb,var(--color-secondary)_65%,white_35%)]">
+                              {item.label}
+                            </dt>
+                            <dd className="text-sm font-semibold text-[color:var(--color-secondary)]">
+                              {formatCurrency(item.amount)}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+
+                    {feeBreakdown.totals.length > 0 && (
+                      <div className="rounded-2xl bg-[color:color-mix(in_srgb,var(--color-accent)_14%,white_86%)] p-4">
+                        <dl className="space-y-2">
+                          {feeBreakdown.totals.map((total) => (
+                            <div
+                              key={total.id}
+                              className="flex items-center justify-between gap-3"
+                            >
+                              <dt className="text-sm font-semibold uppercase tracking-[0.2em] text-[color:color-mix(in_srgb,var(--color-secondary)_55%,white_45%)]">
+                                {total.label}
+                              </dt>
+                              <dd className="text-base font-bold text-[color:var(--color-tertiary)]">
+                                {formatCurrency(total.amount)}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -544,7 +1008,7 @@ export default async function ProgramDetailPage({
                 </div>
               )}
 
-              <div className="surface-card bg-gradient-to-br from-[color:color-mix(in_srgb,var(--color-accent)_80%,white_20%)] via-[color:color-mix(in_srgb,var(--color-accent)_65%,white_35%)] to-[color:color-mix(in_srgb,var(--color-accent)_45%,transparent)] p-6 text-[var(--color-accent-foreground)]">
+              <div className="surface-card bg-gradient-to-br from-[color:color-mix(in_srgb,var(--color-accent)_80%,white_20%)] via-[color:color-mix(in_srgb,var(--color-accent)_65%,white_35%)] to-[color:color-mix(in_srgb,var(--color-accent)_45%,transparent)] p-6 text-black">
                 <h3 className="text-lg font-semibold">
                   Get personalised recommendations
                 </h3>
@@ -554,7 +1018,7 @@ export default async function ProgramDetailPage({
                 </p>
                 <Link
                   href="/#lead-form"
-                  className="mt-4 inline-flex items-center justify-center rounded-full bg-[var(--color-accent-foreground)] px-5 py-2 text-sm font-semibold text-[color:var(--color-accent)] transition hover:opacity-90"
+                  className="mt-4 inline-flex items-center justify-center rounded-full bg-[var(--color-accent-foreground)] px-5 py-2 text-sm font-semibold text-black transition hover:opacity-90"
                 >
                   Start now
                 </Link>
@@ -597,4 +1061,58 @@ function RichContentBlock({
       </div>
     </section>
   );
+}
+
+interface ParseCurriculumResult {
+  semesters: Array<{ title: string; subjects: string[] }>;
+  modules: { title: string | null; items: string[] } | null;
+  rawHtml: string | null;
+}
+
+interface ParseHighlightsResult {
+  entries: HighlightEntry[];
+  rawHtml: string | null;
+}
+
+interface HighlightEntry {
+  id: string;
+  label?: string;
+  value: string;
+}
+
+interface ProgramFeeRow {
+  id: number;
+  label: string;
+  amount: number;
+}
+
+interface FeeEntry {
+  id: number;
+  label: string;
+  amount: number;
+}
+
+interface FeeEntryWithOrder extends FeeEntry {
+  order: number;
+}
+
+interface FeeBreakdownGroup {
+  key: string;
+  title: string;
+  amount?: number;
+  semesters: FeeEntry[];
+}
+
+interface FeeBreakdownResult {
+  groups: FeeBreakdownGroup[];
+  others: FeeEntry[];
+  totals: FeeEntry[];
+}
+
+interface FeeGroupAccumulator {
+  key: string;
+  title: string;
+  amount?: number;
+  semesters: FeeEntryWithOrder[];
+  hasCustomTitle: boolean;
 }

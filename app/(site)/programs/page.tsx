@@ -1,12 +1,13 @@
 import { db } from "@/db";
 import { institutions, programs, programSpecialisations } from "@/db/schema";
-import { eq, sql, and, gte, lte, ilike } from "drizzle-orm";
+import { eq, sql, and, gte, lte, ilike, or } from "drizzle-orm";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
 interface ProgramsPageProps {
   searchParams: Promise<{
     degreeType?: string;
+    category?: string;
     mode?: string;
     minFee?: string;
     maxFee?: string;
@@ -17,8 +18,42 @@ interface ProgramsPageProps {
   }>;
 }
 
+function isMastersDegree(degreeType: string): boolean {
+  const normalized = degreeType.toLowerCase().trim();
+  return (
+    normalized.includes("mba") ||
+    normalized.includes("master") ||
+    normalized.includes("m.com") ||
+    normalized.includes("mcom") ||
+    normalized.includes("m.sc") ||
+    normalized.includes("msc") ||
+    normalized.includes("mca") ||
+    normalized === "ma" ||
+    normalized.startsWith("ma ") ||
+    normalized.includes("pgdm")
+  );
+}
+
+function isBachelorsDegree(degreeType: string): boolean {
+  const normalized = degreeType.toLowerCase().trim();
+  return (
+    normalized.includes("bachelor") ||
+    normalized.includes("bba") ||
+    normalized.includes("bbm") ||
+    normalized.includes("b.a") ||
+    normalized === "b.a." ||
+    normalized.includes("ba ") ||
+    normalized.includes("bca") ||
+    normalized.includes("b.com") ||
+    normalized.includes("bcom") ||
+    normalized.includes("b.sc") ||
+    normalized.includes("bsc")
+  );
+}
+
 async function getPrograms(filters: {
   degreeType?: string;
+  category?: string;
   mode?: string;
   minFee?: string;
   maxFee?: string;
@@ -31,6 +66,34 @@ async function getPrograms(filters: {
 
   if (filters.degreeType) {
     conditions.push(eq(programs.degreeType, filters.degreeType));
+  }
+
+  // Handle category filter (masters or bachelors)
+  if (filters.category === "masters" || filters.category === "bachelors") {
+    // Get all unique degree types to filter by category
+    const allDegreeTypes = await db
+      .selectDistinct({ degreeType: programs.degreeType })
+      .from(programs);
+
+    const matchingDegreeTypes = allDegreeTypes
+      .filter((dt) => dt.degreeType !== null)
+      .map((dt) => dt.degreeType!)
+      .filter((dt) => {
+        if (filters.category === "masters") {
+          return isMastersDegree(dt);
+        } else {
+          return isBachelorsDegree(dt);
+        }
+      });
+
+    if (matchingDegreeTypes.length > 0) {
+      conditions.push(
+        or(...matchingDegreeTypes.map((dt) => eq(programs.degreeType, dt)))
+      );
+    } else {
+      // If no matching degree types found, return empty result
+      conditions.push(eq(programs.id, -1));
+    }
   }
 
   if (filters.mode && isDeliveryMode(filters.mode)) {
@@ -68,7 +131,17 @@ async function getPrograms(filters: {
   if (filters.institution) {
     const institutionId = parseInt(filters.institution, 10);
     if (!isNaN(institutionId)) {
+      // Filter by institution ID
       conditions.push(eq(programs.institutionId, institutionId));
+    } else {
+      // Filter by institution slug or name (case-insensitive)
+      const institutionNameOrSlug = filters.institution.toLowerCase().trim();
+      conditions.push(
+        or(
+          ilike(institutions.slug, `%${institutionNameOrSlug}%`),
+          ilike(institutions.name, `%${institutionNameOrSlug}%`)
+        )
+      );
     }
   }
 
@@ -139,12 +212,131 @@ async function getUniqueDegreeTypes() {
   return result.map((r) => r.degreeType);
 }
 
+function sortDegreeTypes(degreeTypes: (string | null)[]): string[] {
+  const normalized = degreeTypes.filter(
+    (type): type is string => type !== null
+  );
+
+  const categorize = (type: string): number => {
+    const lower = type.toLowerCase().trim();
+
+    // Combo degrees (priority 2) - check first to avoid misclassification
+    if (lower.includes("combo") || lower.includes("+")) {
+      return 2;
+    }
+
+    // Masters degrees (priority 0)
+    if (
+      lower.startsWith("m") &&
+      (lower.includes("mba") ||
+        lower.includes("m.com") ||
+        lower.includes("mcom") ||
+        lower.includes("m.sc") ||
+        lower.includes("msc") ||
+        lower.includes("mca") ||
+        lower === "ma" ||
+        lower.startsWith("ma ") ||
+        lower.includes("master"))
+    ) {
+      return 0;
+    }
+
+    // Bachelors degrees (priority 1)
+    if (
+      lower.startsWith("b") &&
+      (lower.includes("bba") ||
+        lower.includes("b.a") ||
+        lower === "b.a." ||
+        lower.includes("ba ") ||
+        lower.includes("bca") ||
+        lower.includes("b.com") ||
+        lower.includes("bcom") ||
+        lower.includes("b.sc") ||
+        lower.includes("bsc") ||
+        lower.includes("bachelor"))
+    ) {
+      return 1;
+    }
+
+    // Certificate (priority 3)
+    if (lower.includes("certificate")) {
+      return 3;
+    }
+
+    // Other (priority 4)
+    return 4;
+  };
+
+  return normalized.sort((a, b) => {
+    const categoryA = categorize(a);
+    const categoryB = categorize(b);
+
+    if (categoryA !== categoryB) {
+      return categoryA - categoryB;
+    }
+
+    return a.localeCompare(b);
+  });
+}
+
 const deliveryModes = ["online", "blended", "weekend", "on-campus"] as const;
 
 function isDeliveryMode(
   value: string
 ): value is (typeof deliveryModes)[number] {
   return (deliveryModes as readonly string[]).includes(value);
+}
+
+function comparePrograms(
+  a: Awaited<ReturnType<typeof getPrograms>>[number],
+  b: Awaited<ReturnType<typeof getPrograms>>[number]
+) {
+  const degreeRankDiff =
+    rankDegreeType(a.degreeType) - rankDegreeType(b.degreeType);
+  if (degreeRankDiff !== 0) return degreeRankDiff;
+
+  const feeA = a.totalFee ?? Number.POSITIVE_INFINITY;
+  const feeB = b.totalFee ?? Number.POSITIVE_INFINITY;
+  if (feeA !== feeB) return feeA - feeB;
+
+  return a.title.localeCompare(b.title);
+}
+
+function rankDegreeType(value: string | null) {
+  if (!value) return 6;
+
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return 6;
+
+  if (
+    normalized.includes("master") ||
+    normalized.includes("mba") ||
+    normalized.includes("pgdm")
+  )
+    return 0;
+
+  if (
+    normalized.includes("bachelor") ||
+    normalized.includes("bba") ||
+    normalized.includes("bbm")
+  )
+    return 1;
+
+  if (
+    normalized.includes("postgraduate diploma") ||
+    normalized.includes("pg diploma") ||
+    normalized.includes("post graduate program") ||
+    normalized.includes("post graduate programme")
+  )
+    return 2;
+
+  if (normalized.includes("diploma")) return 3;
+
+  if (normalized.includes("executive")) return 4;
+
+  if (normalized.includes("certificate")) return 5;
+
+  return 4;
 }
 
 function formatCurrency(amount: number | null) {
@@ -157,18 +349,44 @@ export default async function ProgramsPage({
   searchParams,
 }: ProgramsPageProps) {
   const params = await searchParams;
+
+  // If category is set, ensure degreeType dropdown reflects it
+  const categoryDegreeTypes =
+    params.category === "masters" || params.category === "bachelors"
+      ? await db
+          .selectDistinct({ degreeType: programs.degreeType })
+          .from(programs)
+          .then((types) =>
+            types
+              .filter((t) => t.degreeType !== null)
+              .map((t) => t.degreeType!)
+              .filter((dt) =>
+                params.category === "masters"
+                  ? isMastersDegree(dt)
+                  : isBachelorsDegree(dt)
+              )
+          )
+      : [];
   const [programList, institutionList, degreeTypes] = await Promise.all([
     getPrograms(params),
     getInstitutions(),
     getUniqueDegreeTypes(),
   ]);
 
-  const featuredPrograms = programList.filter((p) => p.isFeatured);
-  const regularPrograms = programList.filter((p) => !p.isFeatured);
+  // Deduplicate programs by ID (can happen when filtering by specialization)
+  const uniquePrograms = Array.from(
+    new Map(programList.map((program) => [program.id, program])).values()
+  );
+
+  const sortedDegreeTypes = sortDegreeTypes(degreeTypes);
+  const sortedPrograms = [...uniquePrograms].sort(comparePrograms);
+
+  const featuredPrograms = sortedPrograms.filter((p) => p.isFeatured);
+  const regularPrograms = sortedPrograms.filter((p) => !p.isFeatured);
 
   const heroStats = [
     {
-      value: `${programList.length || 0}`,
+      value: `${uniquePrograms.length || 0}`,
       label: "Accredited programs listed",
     },
     {
@@ -188,7 +406,7 @@ export default async function ProgramsPage({
         <div className="section-container relative">
           <div className="max-w-3xl">
             <h1 className="text-4xl font-black leading-[1.15] tracking-tight text-white sm:text-5xl">
-              MBA & PGDM Programs
+              Masters and Bachelors Programs
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-white/70">
               Compare accredited programs by fees, duration, and delivery mode.
@@ -249,12 +467,22 @@ export default async function ProgramsPage({
                   className="w-full rounded-xl border border-[color:color-mix(in_srgb,var(--color-secondary)_16%,transparent)] bg-white px-4 py-2.5 text-sm text-[color:var(--color-secondary)] shadow-[0_12px_24px_-16px_rgba(16,19,26,0.25)] focus:outline focus:outline-2 focus:outline-[var(--color-ring)]"
                 >
                   <option value="">All degrees</option>
-                  {degreeTypes.map((type) => (
+                  {(params.category && categoryDegreeTypes.length > 0
+                    ? categoryDegreeTypes
+                    : sortedDegreeTypes
+                  ).map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
                   ))}
                 </select>
+                {params.category && (
+                  <input
+                    type="hidden"
+                    name="category"
+                    value={params.category}
+                  />
+                )}
               </div>
 
               {/* Delivery Mode */}
@@ -348,6 +576,7 @@ export default async function ProgramsPage({
                 </button>
               </div>
               {(params.degreeType ||
+                params.category ||
                 params.mode ||
                 params.minFee ||
                 params.maxFee ||
@@ -380,8 +609,8 @@ export default async function ProgramsPage({
             </div>
             <div className="inline-flex items-center gap-3 rounded-full border border-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] bg-white px-5 py-2 text-sm font-semibold text-[color:color-mix(in_srgb,var(--color-secondary)_70%,white_30%)]">
               <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[color:var(--color-accent)]" />
-              {programList.length}{" "}
-              {programList.length === 1 ? "program" : "programs"} found
+              {uniquePrograms.length}{" "}
+              {uniquePrograms.length === 1 ? "program" : "programs"} found
             </div>
           </div>
 
@@ -413,7 +642,7 @@ export default async function ProgramsPage({
             </div>
           )}
 
-          {programList.length === 0 && (
+          {uniquePrograms.length === 0 && (
             <div className="surface-card p-12 text-center">
               <p className="text-lg font-semibold text-[color:var(--color-secondary)]">
                 No programs found

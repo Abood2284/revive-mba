@@ -162,7 +162,7 @@ export function HeroSection() {
                   <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--color-accent)] text-xs font-bold text-white">
                     ★
                   </span>
-                  Find Your Perfect MBA Match
+                  Find Your Perfect Program Match
                 </span>
                 <span className="rounded-full bg-[color:color-mix(in_srgb,var(--color-accent)_12%,transparent)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[color:var(--color-accent)]">
                   Free Counseling

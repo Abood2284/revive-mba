@@ -27,6 +27,9 @@ type Program = {
   totalFeeINR: number;
   nextIntake?: string;
   badges?: string[];
+  heroImage?: string;
+  logoUrl?: string;
+  degreeType?: string;
 };
 
 export function AddProgramDialog({
@@ -40,6 +43,7 @@ export function AddProgramDialog({
   const [search, setSearch] = React.useState("");
   const [duration, setDuration] = React.useState("");
   const [spec, setSpec] = React.useState("");
+  const [degreeType, setDegreeType] = React.useState("");
 
   const fetchPrograms = React.useCallback(async () => {
     setLoading(true);
@@ -66,25 +70,118 @@ export function AddProgramDialog({
     }
   }, [open, fetchPrograms]);
 
+  const categorizeDegreeType = React.useCallback(
+    (degreeType: string | undefined): number => {
+      if (!degreeType) return 4;
+      const lower = degreeType.toLowerCase().trim();
+
+      // Combo degrees (priority 2) - check first to avoid misclassification
+      if (lower.includes("combo") || lower.includes("+")) {
+        return 2;
+      }
+
+      // Masters degrees (priority 0)
+      if (
+        lower.startsWith("m") &&
+        (lower.includes("mba") ||
+          lower.includes("m.com") ||
+          lower.includes("mcom") ||
+          lower.includes("m.sc") ||
+          lower.includes("msc") ||
+          lower.includes("mca") ||
+          lower === "ma" ||
+          lower.startsWith("ma ") ||
+          lower.includes("master"))
+      ) {
+        return 0;
+      }
+
+      // Bachelors degrees (priority 1)
+      if (
+        lower.startsWith("b") &&
+        (lower.includes("bba") ||
+          lower.includes("b.a") ||
+          lower === "b.a." ||
+          lower.includes("ba ") ||
+          lower.includes("bca") ||
+          lower.includes("b.com") ||
+          lower.includes("bcom") ||
+          lower.includes("b.sc") ||
+          lower.includes("bsc") ||
+          lower.includes("bachelor"))
+      ) {
+        return 1;
+      }
+
+      // Certificate (priority 3)
+      if (lower.includes("certificate")) {
+        return 3;
+      }
+
+      // Other (priority 4)
+      return 4;
+    },
+    []
+  );
+
+  const sortProgramsByDegreeType = React.useCallback(
+    (programs: Program[]): Program[] => {
+      return [...programs].sort((a, b) => {
+        const categoryA = categorizeDegreeType(a.degreeType);
+        const categoryB = categorizeDegreeType(b.degreeType);
+
+        if (categoryA !== categoryB) {
+          return categoryA - categoryB;
+        }
+
+        // Alphabetically within same category
+        return a.title.localeCompare(b.title);
+      });
+    },
+    [categorizeDegreeType]
+  );
+
+  const uniqueDegreeTypes = React.useMemo(() => {
+    const types = new Set<string>();
+    programs.forEach((p) => {
+      if (p.degreeType) {
+        types.add(p.degreeType);
+      }
+    });
+    return Array.from(types).sort();
+  }, [programs]);
+
   const filteredPrograms = React.useMemo(() => {
     const [dMin, dMax] = parseRange(duration);
-    return programs
-      .filter((p) => {
-        // Exclude already selected programs
-        if (currentProgramIds.includes(parseInt(p.id, 10))) return false;
+    const filtered = programs.filter((p) => {
+      // Exclude already selected programs
+      if (currentProgramIds.includes(parseInt(p.id, 10))) return false;
 
-        const durOk =
-          !duration || (p.durationMonths >= dMin && p.durationMonths <= dMax);
-        const specOk = !spec || p.specialization === spec;
-        const queryOk =
-          !search ||
-          (p.title + " " + p.university + " " + p.specialization)
-            .toLowerCase()
-            .includes(search.toLowerCase());
-        return durOk && specOk && queryOk;
-      })
-      .slice(0, 20); // Limit to 20 results for performance
-  }, [programs, duration, spec, search, currentProgramIds]);
+      const durOk =
+        !duration || (p.durationMonths >= dMin && p.durationMonths <= dMax);
+      const specOk = !spec || p.specialization === spec;
+      const degreeOk = !degreeType || p.degreeType === degreeType;
+      const queryOk =
+        !search ||
+        (p.title + " " + p.university + " " + p.specialization)
+          .toLowerCase()
+          .includes(search.toLowerCase());
+      return durOk && specOk && degreeOk && queryOk;
+    });
+
+    // Sort by degree type (Masters → Bachelors → Certificates)
+    const sorted = sortProgramsByDegreeType(filtered);
+
+    return sorted.slice(0, 20); // Limit to 20 results for performance
+  }, [
+    programs,
+    duration,
+    spec,
+    search,
+    degreeType,
+    currentProgramIds,
+    sortProgramsByDegreeType,
+  ]);
 
   const handleAddProgram = (programId: string) => {
     const currentIds = getComparisonIdsFromStorage();
@@ -126,8 +223,8 @@ export function AddProgramDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <Dialog.Content className="fixed inset-0 z-50 w-full h-[100svh] overflow-hidden bg-white md:left-1/2 md:top-1/2 md:h-auto md:w-full md:max-w-4xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:shadow-xl">
-          <div className="flex h-full flex-col md:max-h-[80vh]">
+        <Dialog.Content className="fixed inset-0 z-50 w-full h-[100svh] overflow-hidden bg-white md:left-1/2 md:top-1/2 md:h-[98vh] md:w-full md:max-w-5xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:shadow-xl">
+          <div className="flex h-full flex-col">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#d9dce6] p-6 sticky top-0 z-10 bg-white">
               <div>
@@ -150,7 +247,7 @@ export function AddProgramDialog({
 
             {/* Filters */}
             <div className="border-b border-[#d9dce6] p-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-[#514EA1] mb-2">
                     Search
@@ -166,45 +263,61 @@ export function AddProgramDialog({
                   </div>
                 </div>
 
-                <div className="flex gap-4 md:contents">
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-[#514EA1] mb-2">
-                      Duration
-                    </label>
-                    <select
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className="w-full rounded-lg border border-[#d9dce6] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
-                    >
-                      <option value="">Any</option>
-                      <option value="12-18">12–18 months</option>
-                      <option value="18-24">18–24 months</option>
-                      <option value="24-30">24–30 months</option>
-                    </select>
-                  </div>
-
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-[#514EA1] mb-2">
-                      Specialisation
-                    </label>
-                    <select
-                      value={spec}
-                      onChange={(e) => setSpec(e.target.value)}
-                      className="w-full rounded-lg border border-[#d9dce6] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
-                    >
-                      <option value="">Any</option>
-                      <option value="general">General</option>
-                      <option value="finance">Finance</option>
-                      <option value="marketing">Marketing</option>
-                      <option value="business-analytics">
-                        Business Analytics
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-[#514EA1] mb-2">
+                    Degree Type
+                  </label>
+                  <select
+                    value={degreeType}
+                    onChange={(e) => setDegreeType(e.target.value)}
+                    className="w-full rounded-lg border border-[#d9dce6] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
+                  >
+                    <option value="">All Degrees</option>
+                    {uniqueDegreeTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
                       </option>
-                      <option value="hr">Human Resources</option>
-                      <option value="operations">Operations</option>
-                      <option value="it">IT & Systems</option>
-                      <option value="healthcare">Healthcare</option>
-                    </select>
-                  </div>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-[#514EA1] mb-2">
+                    Duration
+                  </label>
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    className="w-full rounded-lg border border-[#d9dce6] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
+                  >
+                    <option value="">Any</option>
+                    <option value="12-18">12–18 months</option>
+                    <option value="18-24">18–24 months</option>
+                    <option value="24-30">24–30 months</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-[#514EA1] mb-2">
+                    Specialisation
+                  </label>
+                  <select
+                    value={spec}
+                    onChange={(e) => setSpec(e.target.value)}
+                    className="w-full rounded-lg border border-[#d9dce6] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#514EA1]"
+                  >
+                    <option value="">Any</option>
+                    <option value="general">General</option>
+                    <option value="finance">Finance</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="business-analytics">
+                      Business Analytics
+                    </option>
+                    <option value="hr">Human Resources</option>
+                    <option value="operations">Operations</option>
+                    <option value="it">IT & Systems</option>
+                    <option value="healthcare">Healthcare</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -238,6 +351,7 @@ export function AddProgramDialog({
                       setSearch("");
                       setDuration("");
                       setSpec("");
+                      setDegreeType("");
                     }}
                     className="inline-flex items-center justify-center rounded-full border border-[#d9dce6] px-4 py-2 text-sm font-semibold text-[#3D38B8] transition hover:border-[#514EA1] hover:text-[#514EA1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8]"
                   >
@@ -254,36 +368,83 @@ export function AddProgramDialog({
                     {filteredPrograms.map((program) => (
                       <div
                         key={program.id}
-                        className="group rounded-2xl border border-[#d9dce6] bg-white p-4 shadow-sm transition hover:border-[#3D38B8] hover:shadow-md"
+                        className="group rounded-2xl border border-[#d9dce6] bg-white overflow-hidden shadow-sm transition hover:border-[#3D38B8] hover:shadow-md"
                       >
-                        <div className="mb-3 flex flex-wrap gap-2">
-                          {program.badges
-                            ?.filter((b) =>
-                              !b || !b.toLowerCase().includes("ugc") ? b : null
-                            )
-                            .map((badge) => (
-                              <span
-                                key={badge}
-                                className="rounded-full border border-[#d9dce6] bg-[#f5f6fa] px-2 py-1 text-[10px] uppercase tracking-wide text-[#3D38B8]"
-                              >
-                                {badge}
+                        {/* Hero Image */}
+                        {program.heroImage && (
+                          <div className="relative h-32 w-full overflow-hidden">
+                            <img
+                              src={program.heroImage}
+                              alt={program.title}
+                              className="h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            {program.degreeType && (
+                              <div className="absolute bottom-2 left-2">
+                                <span className="rounded-full border border-white/40 bg-white/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                                  {program.degreeType}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="p-4">
+                          {/* Badges */}
+                          {program.badges && program.badges.length > 0 && (
+                            <div className="mb-3 flex flex-wrap gap-2">
+                              {program.badges
+                                .filter((b) =>
+                                  !b || !b.toLowerCase().includes("ugc")
+                                    ? b
+                                    : null
+                                )
+                                .map((badge) => (
+                                  <span
+                                    key={badge}
+                                    className="rounded-full border border-[#d9dce6] bg-[#f5f6fa] px-2 py-1 text-[10px] uppercase tracking-wide text-[#3D38B8]"
+                                  >
+                                    {badge}
+                                  </span>
+                                ))}
+                            </div>
+                          )}
+
+                          {/* Logo and University */}
+                          <div className="mb-3 flex items-center gap-3">
+                            {program.logoUrl && (
+                              <img
+                                src={program.logoUrl}
+                                alt={program.university}
+                                className="h-10 w-10 flex-shrink-0 rounded object-contain"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-semibold leading-snug text-[#10131a] mb-1 line-clamp-2">
+                                {program.title}
+                              </h3>
+                              <p className="text-xs text-[#5a6072]">
+                                {program.university}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Degree Type if no hero image */}
+                          {!program.heroImage && program.degreeType && (
+                            <div className="mb-3">
+                              <span className="inline-block rounded-full border border-[#d9dce6] bg-[#f5f6fa] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#3D38B8]">
+                                {program.degreeType}
                               </span>
-                            ))}
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => handleAddProgram(program.id)}
+                            className="w-full rounded-full bg-[#3D38B8] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#514EA1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8]"
+                          >
+                            Add to Comparison
+                          </button>
                         </div>
-
-                        <h3 className="text-lg font-semibold leading-snug text-[#10131a] mb-2">
-                          {program.title}
-                        </h3>
-                        <p className="text-sm text-[#5a6072] mb-3">
-                          {program.university}
-                        </p>
-
-                        <button
-                          onClick={() => handleAddProgram(program.id)}
-                          className="w-full rounded-full bg-[#3D38B8] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#514EA1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3D38B8]"
-                        >
-                          Add to Comparison
-                        </button>
                       </div>
                     ))}
                   </div>
